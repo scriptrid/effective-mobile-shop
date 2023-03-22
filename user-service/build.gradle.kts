@@ -6,6 +6,7 @@ plugins {
 
 group = "ru.scriptrid"
 version = "0.0.1-SNAPSHOT"
+
 java.sourceCompatibility = JavaVersion.VERSION_17
 
 configurations {
@@ -25,6 +26,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+
+    implementation((project(":common")))
 
     compileOnly("org.projectlombok:lombok")
 

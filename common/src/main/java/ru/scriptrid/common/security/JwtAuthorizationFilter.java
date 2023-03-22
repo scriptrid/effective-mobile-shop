@@ -1,30 +1,32 @@
-package ru.scriptrid.userservice.security;
+package ru.scriptrid.common.security;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import ru.scriptrid.userservice.service.UserService;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
+    @Value("${jwt-secretcode}")
+    private String secret;
 
-    private final JwtUtility jwtUtility;
-    private final UserService userService;
+    @Value("${jwt-issuer}")
+    private String issuer;
 
-    public JwtAuthorizationFilter(JwtUtility jwtUtility, UserService userService) {
-        this.jwtUtility = jwtUtility;
-        this.userService = userService;
-    }
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -36,10 +38,8 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid JWT token in Bearer Header");
             } else {
                 try {
-                    String username = jwtUtility.validateTokenAndGetSubject(jwt);
-                    UserDetails userDetails = userService.loadUserByUsername(username);
-                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, userDetails.getPassword(), userDetails.getAuthorities());
-
+                    Claims claims = parseToken(jwt);
+                    JwtAuthenticationToken authenticationToken = new JwtAuthenticationToken(claims);
                     if (SecurityContextHolder.getContext().getAuthentication() == null) {
                         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                     }
@@ -50,5 +50,15 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             }
         }
         filterChain.doFilter(request, response);
+    }
+
+    private Claims parseToken(String token) throws JwtException {
+        Jws<Claims> jwt = Jwts.parserBuilder()
+                .setSigningKey(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
+                .requireIssuer(issuer)
+                .build()
+                .parseClaimsJws(token);
+
+        return jwt.getBody();
     }
 }

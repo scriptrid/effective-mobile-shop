@@ -33,18 +33,4 @@ public class JwtUtility {
                 .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)), SignatureAlgorithm.HS256)
                 .compact();
     }
-
-    //Метод для валидации JWT-токена и дальнейшего декодирования
-    public String validateTokenAndGetSubject(String token) throws JwtException {
-        Jws<Claims> jwt = Jwts.parserBuilder()
-                .setSigningKey(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
-                .requireIssuer(issuer)
-                .build()
-                .parseClaimsJws(token);
-
-        return jwt.getSignature();
-    }
-
-
-
 }

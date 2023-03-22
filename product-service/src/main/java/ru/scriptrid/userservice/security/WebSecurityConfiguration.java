@@ -12,7 +12,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import ru.scriptrid.common.security.JwtAuthorizationFilter;
-import ru.scriptrid.userservice.service.UserService;
 
 @Configuration
 @EnableWebSecurity
@@ -20,7 +19,7 @@ import ru.scriptrid.userservice.service.UserService;
 public class WebSecurityConfiguration {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, UserService userService, JwtAuthorizationFilter jwtAuthorizationFilter) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthorizationFilter jwtAuthorizationFilter) throws Exception {
         return http
                 .csrf().disable()
                 .httpBasic().disable()
@@ -28,11 +27,8 @@ public class WebSecurityConfiguration {
 
                 .and()
                 .authorizeHttpRequests()
-                .requestMatchers("/api/user/*").permitAll()
-
+                .anyRequest().authenticated()
                 .and()
-                .userDetailsService(userService)
-
                 .exceptionHandling()
                 .authenticationEntryPoint(
                         ((request, response, authException) ->
