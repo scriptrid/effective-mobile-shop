@@ -1,7 +1,7 @@
 package ru.scriptrid.userservice.model.dto;
 
 public record UserDto(
-        int id,
+        long id,
         String username,
         String email,
         boolean isAdmin

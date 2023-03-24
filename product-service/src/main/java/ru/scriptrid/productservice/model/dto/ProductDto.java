@@ -1,5 +1,6 @@
 package ru.scriptrid.productservice.model.dto;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public record ProductDto(
@@ -11,7 +12,7 @@ public record ProductDto(
 
         long organizationId,
 
-        double price,
+        BigDecimal price,
 
         int quantityInStock,
 

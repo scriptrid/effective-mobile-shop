@@ -6,10 +6,10 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.scriptrid.common.dto.OrganizationDto;
 import ru.scriptrid.common.exception.FrozenOrganizationException;
 import ru.scriptrid.common.exception.InvalidOwnerException;
-import ru.scriptrid.common.exception.OrganizationNotFoundException;
+import ru.scriptrid.common.exception.OrganizationNotFoundByIdException;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
 import ru.scriptrid.productservice.exceptions.ProductAlreadyExistsException;
-import ru.scriptrid.productservice.exceptions.ProductNotFoundException;
+import ru.scriptrid.productservice.exceptions.ProductNotFoundByIdException;
 import ru.scriptrid.productservice.model.dto.ProductCreateDto;
 import ru.scriptrid.productservice.model.dto.ProductDto;
 import ru.scriptrid.productservice.model.entity.ProductEntity;
@@ -34,8 +34,8 @@ public class ProductService {
     public ProductDto addProduct(JwtAuthenticationToken token, ProductCreateDto dto) {
         OrganizationDto organizationDto = webOrganizationService.getDto(dto.organizationId());
         if (organizationDto == null) {
-            log.info("Organization \"{}\" was not found", dto.organizationId());
-            throw new OrganizationNotFoundException();
+            log.info("Organization with id \"{}\" was not found", dto.organizationId());
+            throw new OrganizationNotFoundByIdException(dto.organizationId());
         }
         if (organizationDto.isFrozen()) {
             log.info("Organization with id \"{}\" is frozen", dto.organizationId());
@@ -43,11 +43,11 @@ public class ProductService {
         }
         if (!organizationDto.owner().equals(token.getUsername())) {
             log.info("User \"{}\" is not an owner of organization with id \"{}\"", token.getUsername(), dto.organizationId());
-            throw new InvalidOwnerException();
+            throw new InvalidOwnerException(organizationDto.id(), organizationDto.owner(), token.getUsername());
         }
         if (productRepository.existsByProductName(dto.productName())) {
             log.info("The product \"{}\" already exists", dto.productName());
-            throw new ProductAlreadyExistsException();
+            throw new ProductAlreadyExistsException(dto.productName());
         }
         productRepository.save(toProductEntity(dto));
 
@@ -59,35 +59,39 @@ public class ProductService {
         ProductEntity product = productRepository.findById(id).orElseThrow(
                 () -> {
                     log.info("The product to be edited with id \"{}\" was not found", id);
-                    throw new ProductNotFoundException();
+                    throw new ProductNotFoundByIdException(id);
                 }
         );
 
         OrganizationDto newOrganizationDto = webOrganizationService.getDto(dto.organizationId());
         OrganizationDto oldOrganizationDto = webOrganizationService.getDto(product.getId());
+        if (token.isAdmin()) {
 
+            return toProductDto(modifyEntity(product, dto));
+        }
         if (newOrganizationDto == null) {
             log.info("Organization \"{}\" was not found", dto.organizationId());
-            throw new OrganizationNotFoundException();
+            throw new OrganizationNotFoundByIdException(id);
         }
         if (newOrganizationDto.isFrozen()) {
             log.info("Organization with id \"{}\" is frozen", dto.organizationId());
             throw new FrozenOrganizationException();
         }
+
         if (!oldOrganizationDto.owner().equals(token.getUsername())) {
             log.info("User \"{}\" is not an owner of old organization\"{}\"", token.getUsername(), oldOrganizationDto.id());
-            throw new InvalidOwnerException();
+            throw new InvalidOwnerException(oldOrganizationDto.id(), oldOrganizationDto.owner(), token.getUsername());
         }
         if (!newOrganizationDto.owner().equals(token.getUsername())) {
             log.info("User \"{}\" is not an owner of new organization \"{}\"", token.getUsername(), dto.organizationId());
-            throw new InvalidOwnerException();
+            throw new InvalidOwnerException(newOrganizationDto.id(), newOrganizationDto.owner(), token.getUsername());
         }
         if (productRepository.existsByProductName(dto.productName()) && !product.getProductName().equals(dto.productName())) {
             log.info("The product with new name \"{}\" already exists", dto.productName());
-            throw new ProductAlreadyExistsException();
+            throw new ProductAlreadyExistsException(dto.productName());
         }
-        modifyEntity(product, dto);
-        return toProductDto(product);
+
+        return toProductDto(modifyEntity(product, dto));
     }
 
     @Transactional
@@ -95,7 +99,7 @@ public class ProductService {
         ProductEntity product = productRepository.findById(id).orElseThrow(
                 () -> {
                     log.info("The product to be edited with id \"{}\" was not found", id);
-                    throw new ProductNotFoundException();
+                    throw new ProductNotFoundByIdException(id);
                 }
         );
         OrganizationDto organizationDto = webOrganizationService.getDto(product.getOrganizationId());
@@ -104,7 +108,7 @@ public class ProductService {
         }
         if (!organizationDto.owner().equals(token.getUsername())) {
             log.info("User \"{}\" is not an owner of organization \"{}\"", token.getUsername(), organizationDto.id());
-            throw new InvalidOwnerException();
+            throw new InvalidOwnerException(organizationDto.id(), organizationDto.owner(), token.getUsername());
         }
         productRepository.deleteById(id);
     }
@@ -113,7 +117,7 @@ public class ProductService {
         ProductEntity product = productRepository.findById(id).orElseThrow(
                 () -> {
                     log.info("The product to be edited with id \"{}\" was not found", id);
-                    throw new ProductNotFoundException();
+                    throw new ProductNotFoundByIdException(id);
                 }
         );
         return toProductDto(product);
@@ -139,7 +143,7 @@ public class ProductService {
         return entity;
     }
 
-    private void modifyEntity(ProductEntity entity, ProductCreateDto dto) {
+    private ProductEntity modifyEntity(ProductEntity entity, ProductCreateDto dto) {
         entity.setProductName(dto.productName());
 
         if (dto.description() != null) {
@@ -157,5 +161,6 @@ public class ProductService {
         } else {
             entity.setSpecs("Empty specs");
         }
+        return entity;
     }
 }

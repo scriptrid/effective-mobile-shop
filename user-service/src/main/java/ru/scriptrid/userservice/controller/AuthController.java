@@ -20,7 +20,7 @@ import ru.scriptrid.userservice.service.UserService;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api")
 public class AuthController {
 
     private final UserService userService;
@@ -45,7 +45,7 @@ public class AuthController {
         if (!doLogin(req, dto.username(), dto.password())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        UserDto user = userService.getUser(dto.username());
+        UserDto user = userService.getUserDtoByUsername(dto.username());
         String token = jwtUtility.generateToken(user);
         return ResponseEntity.ok().header("Authorization", token).body(user);
     }
