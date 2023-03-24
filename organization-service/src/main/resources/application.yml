@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: 8083
 
 spring:
   jpa:
@@ -9,7 +9,7 @@ spring:
 
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/shop_products
+    url: jdbc:postgresql://localhost:5432/shop_organizations
     driverClassName: org.postgresql.Driver
     username: postgres
     password: postgres
@@ -20,7 +20,3 @@ logging:
 
 jwt-secretcode: really_big_secret_code_trust_me_i_always_right
 jwt-issuer: user-service/shop/effective-mobile
-
-services:
-  organization:
-    uri: http://localhost:8083

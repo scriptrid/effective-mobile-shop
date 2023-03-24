@@ -39,7 +39,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             } else {
                 try {
                     Claims claims = parseToken(jwt);
-                    JwtAuthenticationToken authenticationToken = new JwtAuthenticationToken(claims);
+                    JwtAuthenticationToken authenticationToken = new JwtAuthenticationToken(claims, jwt);
                     if (SecurityContextHolder.getContext().getAuthentication() == null) {
                         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                     }

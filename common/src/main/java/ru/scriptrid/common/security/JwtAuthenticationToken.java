@@ -19,15 +19,18 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 
     private final boolean isAdmin;
 
+    private final String jwt;
+
     private final List<GrantedAuthority> authorities;
 
-    public JwtAuthenticationToken(Claims claims) {
+    public JwtAuthenticationToken(Claims claims, String jwt) {
 
         super(null);
         this.id = Integer.parseInt(claims.getSubject());
         this.username = claims.get("username", String.class);
         this.email = claims.get("email", String.class);
         this.isAdmin = claims.get("isAdmin", Boolean.class);
+        this.jwt = jwt;
 
         if (isAdmin) {
             this.authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"), new SimpleGrantedAuthority("ROLE_ADMIN"));
@@ -37,6 +40,10 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 
     }
 
+    @Override
+    public String getName() {
+        return username;
+    }
 
     @Override
     public Collection<GrantedAuthority> getAuthorities() {
@@ -50,7 +57,7 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 
     @Override
     public Object getPrincipal() {
-        return username;
+        return this;
     }
 
     @Override
@@ -61,6 +68,10 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
     @Override
     public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
         throw new IllegalStateException();
+    }
+
+    public String getJwt() {
+        return jwt;
     }
 
     public String getEmail() {
@@ -77,5 +88,16 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 
     public boolean isAdmin() {
         return isAdmin;
+    }
+
+    @Override
+    public String toString() {
+        return "JwtAuthenticationToken{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", isAdmin=" + isAdmin +
+                ", authorities=" + authorities +
+                '}';
     }
 }

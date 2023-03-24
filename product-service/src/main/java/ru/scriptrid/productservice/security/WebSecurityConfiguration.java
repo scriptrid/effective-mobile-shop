@@ -1,9 +1,10 @@
-package ru.scriptrid.userservice.security;
+package ru.scriptrid.productservice.security;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -15,6 +16,7 @@ import ru.scriptrid.common.security.JwtAuthorizationFilter;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @ComponentScan("ru.scriptrid.common")
 public class WebSecurityConfiguration {
 
@@ -24,7 +26,6 @@ public class WebSecurityConfiguration {
                 .csrf().disable()
                 .httpBasic().disable()
                 .cors()
-
                 .and()
                 .authorizeHttpRequests()
                 .anyRequest().authenticated()
@@ -32,7 +33,7 @@ public class WebSecurityConfiguration {
                 .exceptionHandling()
                 .authenticationEntryPoint(
                         ((request, response, authException) ->
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
+                                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden"))
                 )
 
                 .and()

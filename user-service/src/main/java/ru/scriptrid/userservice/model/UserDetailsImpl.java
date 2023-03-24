@@ -1,8 +1,9 @@
-package ru.scriptrid.userservice.model.entity;
+package ru.scriptrid.userservice.model;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import ru.scriptrid.userservice.model.entity.UserEntity;
 
 import java.util.Collection;
 import java.util.List;

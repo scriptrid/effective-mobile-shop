@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.scriptrid.userservice.exceptions.UsernameAlreadyExistsException;
 import ru.scriptrid.userservice.model.dto.CreateUserDto;
 import ru.scriptrid.userservice.model.dto.UserDto;
-import ru.scriptrid.userservice.model.entity.UserDetailsImpl;
+import ru.scriptrid.userservice.model.UserDetailsImpl;
 import ru.scriptrid.userservice.model.entity.UserEntity;
 import ru.scriptrid.userservice.repository.UserRepository;
 

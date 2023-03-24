@@ -62,7 +62,6 @@ public class AuthController {
 
     }
 
-
     private boolean doLogin(HttpServletRequest req, String username, String password) {
         try {
             req.login(username, password);
