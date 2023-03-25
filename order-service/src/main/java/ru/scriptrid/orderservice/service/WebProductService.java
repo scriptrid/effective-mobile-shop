@@ -3,8 +3,10 @@ package ru.scriptrid.orderservice.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
@@ -33,10 +35,27 @@ public class WebProductService {
                 .block();
     }
 
-    public void reserveProduct(long id) { //TODO
+    public void reserveProduct(long productId, int quantity) {
+        JwtAuthenticationToken token = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        webClient.put()
+                .uri("/api/product/" + productId + "/reserve")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromValue(quantity))
+                .header("Authentication", "Bearer " + token.getJwt())
+                .retrieve()
+                .toBodilessEntity()
+                .block();
     }
 
-    public void returnProduct(long productId) {
-
+    public void returnProduct(long productId, int quantity) {
+        JwtAuthenticationToken token = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        webClient.put()
+                .uri("/api/product/" + productId + "/return")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromValue(quantity))
+                .header("Authentication", "Bearer " + token.getJwt())
+                .retrieve()
+                .toBodilessEntity()
+                .block();
     }
 }

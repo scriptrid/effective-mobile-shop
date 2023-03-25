@@ -1,10 +1,10 @@
-package ru.scriptrid.userservice;
+package ru.scriptrid.organizationservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import ru.scriptrid.orderservice.OrderServiceApplication;
+import ru.scriptrid.ordersecrice.OrganizationServiceApplication;
 
-@SpringBootTest(classes = OrderServiceApplication.class)
+@SpringBootTest(classes = OrganizationServiceApplication.class)
 class OrganizationServiceApplicationTests {
 
     @Test

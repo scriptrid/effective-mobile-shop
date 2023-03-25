@@ -3,15 +3,17 @@ package ru.scriptrid.orderservice.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+import ru.scriptrid.common.dto.TransactionCreateDto;
 import ru.scriptrid.common.dto.UserDto;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
 
-import java.math.BigDecimal;
 
 @Service
 @Slf4j
@@ -36,6 +38,15 @@ public class WebUserService {
 
     }
 
-    public void transferMoney(long customerId, long sellerId, BigDecimal total, BigDecimal sellersIncome) {
+    public void transferMoney(TransactionCreateDto dto) {
+        JwtAuthenticationToken token = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        webClient.put()
+                .uri("/api/user/balance/transfer")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromValue(dto))
+                .header("Authentication", "Bearer " + token.getJwt())
+                .retrieve()
+                .toBodilessEntity()
+                .block();
     }
 }

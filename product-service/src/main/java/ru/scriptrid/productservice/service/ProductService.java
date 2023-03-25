@@ -42,9 +42,9 @@ public class ProductService {
             log.info("Organization with id \"{}\" is frozen", dto.organizationId());
             throw new FrozenOrganizationException();
         }
-        if (!organizationDto.owner().equals(token.getUsername())) {
+        if (organizationDto.ownerId() != token.getId()) {
             log.info("User \"{}\" is not an owner of organization with id \"{}\"", token.getUsername(), dto.organizationId());
-            throw new InvalidOwnerException(organizationDto.id(), organizationDto.owner(), token.getUsername());
+            throw new InvalidOwnerException(organizationDto.id(), organizationDto.ownerId(), token.getId());
         }
         if (productRepository.existsByProductName(dto.productName())) {
             log.info("The product \"{}\" already exists", dto.productName());
@@ -79,13 +79,13 @@ public class ProductService {
             throw new FrozenOrganizationException();
         }
 
-        if (!oldOrganizationDto.owner().equals(token.getUsername())) {
+        if (oldOrganizationDto.ownerId() != token.getId()) {
             log.info("User \"{}\" is not an owner of old organization\"{}\"", token.getUsername(), oldOrganizationDto.id());
-            throw new InvalidOwnerException(oldOrganizationDto.id(), oldOrganizationDto.owner(), token.getUsername());
+            throw new InvalidOwnerException(oldOrganizationDto.id(), oldOrganizationDto.ownerId(), token.getId());
         }
-        if (!newOrganizationDto.owner().equals(token.getUsername())) {
+        if (newOrganizationDto.ownerId() != token.getId()) {
             log.info("User \"{}\" is not an owner of new organization \"{}\"", token.getUsername(), dto.organizationId());
-            throw new InvalidOwnerException(newOrganizationDto.id(), newOrganizationDto.owner(), token.getUsername());
+            throw new InvalidOwnerException(newOrganizationDto.id(), newOrganizationDto.ownerId(), token.getId());
         }
         if (productRepository.existsByProductName(dto.productName()) && !product.getProductName().equals(dto.productName())) {
             log.info("The product with new name \"{}\" already exists", dto.productName());
@@ -102,9 +102,9 @@ public class ProductService {
         if (token.isAdmin()) {
             productRepository.deleteById(id);
         }
-        if (!organizationDto.owner().equals(token.getUsername())) {
+        if (organizationDto.ownerId() != token.getId()) {
             log.info("User \"{}\" is not an owner of organization \"{}\"", token.getUsername(), organizationDto.id());
-            throw new InvalidOwnerException(organizationDto.id(), organizationDto.owner(), token.getUsername());
+            throw new InvalidOwnerException(organizationDto.id(), organizationDto.ownerId(), token.getId());
         }
         productRepository.deleteById(id);
     }

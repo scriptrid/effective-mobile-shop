@@ -13,11 +13,15 @@ public class UserDetailsImpl implements UserDetails {
     private final String username;
     private final String password;
     private final boolean isAdmin;
+    private final boolean isFrozen;
+    private final boolean isDeleted;
 
     public UserDetailsImpl(UserEntity entity) {
         this.username = entity.getUsername();
         this.password = entity.getPassword();
         this.isAdmin = entity.getIsAdmin();
+        this.isDeleted = entity.getIsDeleted();
+        this.isFrozen = entity.getIsFrozen();
     }
 
 

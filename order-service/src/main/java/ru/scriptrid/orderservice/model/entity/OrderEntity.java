@@ -15,14 +15,17 @@ public class OrderEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "order_entity_seq")
     @SequenceGenerator(name = "order_entity_seq")
-    @Column(name = "productId", nullable = false)
+    @Column(name = "order_id", nullable = false)
     private Long id;
+
+    @Column(name = "transaction_id")
+    private Long transactionId;
 
     @Column(name = "product_id", nullable = false)
     private Long productId;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @Column(name = "customer_id", nullable = false)
+    private Long customerId;
 
     @Column(name = "quantity_of_product", nullable = false)
     private Integer quantityOfProduct;
@@ -38,6 +41,4 @@ public class OrderEntity {
 
     @Column(name = "is_returned", nullable = false)
     private Boolean isReturned = false;
-
-
 }

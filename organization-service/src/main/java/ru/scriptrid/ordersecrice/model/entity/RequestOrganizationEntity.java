@@ -23,6 +23,6 @@ public class RequestOrganizationEntity {
     private String organizationDescription;
 
     @Column(name = "organization_owner", nullable = false)
-    private String organizationOwner;
+    private Long organizationOwnerId;
 
 }

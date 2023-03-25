@@ -3,6 +3,7 @@ package ru.scriptrid.userservice.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import ru.scriptrid.userservice.exceptions.InsufficientFundsException;
 import ru.scriptrid.userservice.exceptions.UserNotFoundByIdException;
 import ru.scriptrid.userservice.exceptions.UserNotFoundByUsernameException;
 import ru.scriptrid.userservice.exceptions.UsernameAlreadyExistsException;
@@ -23,5 +24,10 @@ public class BusinessExceptionHandler {
     @ExceptionHandler(UserNotFoundByIdException.class)
     public ResponseEntity<Void> onUserNotFoundById() {
         return ResponseEntity.notFound().build();
+    }
+
+    @ExceptionHandler(InsufficientFundsException.class)
+    public ResponseEntity<Void> onInsufficientFunds() {
+        return ResponseEntity.badRequest().build();
     }
 }

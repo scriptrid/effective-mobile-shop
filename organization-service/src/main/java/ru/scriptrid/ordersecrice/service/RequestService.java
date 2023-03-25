@@ -31,7 +31,7 @@ public class RequestService {
             log.info("The organization \"{}\" already exists", dto.name());
             throw new OrganizationAlreadyExistsException(dto.name());
         }
-        RequestOrganizationEntity entity = toEntity(token.getUsername(), dto);
+        RequestOrganizationEntity entity = toEntity(token.getId(), dto);
         requestOrganizationRepository.save(entity);
         return toDto(entity);
     }
@@ -41,15 +41,15 @@ public class RequestService {
                 entity.getId(),
                 entity.getOrganizationName(),
                 entity.getOrganizationDescription(),
-                entity.getOrganizationOwner()
+                entity.getOrganizationOwnerId()
         );
     }
 
-    private RequestOrganizationEntity toEntity(String username, RequestOrganizationCreateDto dto) {
+    private RequestOrganizationEntity toEntity(long usernameId, RequestOrganizationCreateDto dto) {
         RequestOrganizationEntity entity = new RequestOrganizationEntity();
         entity.setOrganizationName(dto.name());
         entity.setOrganizationDescription(dto.description());
-        entity.setOrganizationOwner(username);
+        entity.setOrganizationOwnerId(usernameId);
         return entity;
     }
 

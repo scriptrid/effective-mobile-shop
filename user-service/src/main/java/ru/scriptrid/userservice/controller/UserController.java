@@ -3,6 +3,7 @@ package ru.scriptrid.userservice.controller;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import ru.scriptrid.common.dto.TransactionCreateDto;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
 import ru.scriptrid.common.dto.UserDto;
 import ru.scriptrid.userservice.service.UserService;
@@ -53,6 +54,12 @@ public class UserController {
     @PutMapping("/me/delete")
     public void deleteUser(@AuthenticationPrincipal JwtAuthenticationToken token) {
         userService.deleteUser(token.getId());
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_SERVICE')")
+    @PutMapping("/balance/transfer")
+    public void transfer(@RequestBody TransactionCreateDto dto) {
+        userService.transfer(dto);
     }
 
 
