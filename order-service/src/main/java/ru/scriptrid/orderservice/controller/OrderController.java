@@ -1,14 +1,14 @@
 package ru.scriptrid.orderservice.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
 import ru.scriptrid.orderservice.model.dto.OrderCreateDto;
 import ru.scriptrid.orderservice.model.dto.OrderDto;
 import ru.scriptrid.orderservice.service.OrderService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/order")
@@ -23,6 +23,23 @@ public class OrderController {
     @PostMapping()
     public OrderDto addOrder(@AuthenticationPrincipal JwtAuthenticationToken token, @RequestBody OrderCreateDto dto) {
         return orderService.addOrder(dto, token);
+    }
+
+    @GetMapping("/my")
+    public List<OrderDto> getUsersOrders(@AuthenticationPrincipal JwtAuthenticationToken token) {
+        return orderService.getUsersOrders(token.getId());
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @GetMapping("/all")
+    public List<OrderDto> getAllOrders() {
+        return orderService.getAllOrders();
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @GetMapping("/user/{id}")
+    public List<OrderDto> getUsersOrders(@PathVariable long id) {
+        return orderService.getUsersOrders(id);
     }
 
 }

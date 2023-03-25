@@ -18,12 +18,13 @@ import ru.scriptrid.orderservice.repository.TransactionRepository;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 @Slf4j
 public class OrderService {
     private final OrderRepository orderRepository;
-
     private final WebProductService webProductService;
     private final WebUserService webUserService;
     private final WebOrganizationService webOrganizationService;
@@ -103,5 +104,22 @@ public class OrderService {
         entity.setTotal(transactionCreateDto.total());
         entity.setSellersIncome(transactionCreateDto.sellersIncome());
         return entity;
+    }
+
+    public List<OrderDto> getUsersOrders(long userId) {
+        return orderRepository.findAll()
+                .stream()
+                .filter(order -> order.getCustomerId() == userId)
+                .map(this::toOrderDto)
+                .sorted(Comparator.comparing(OrderDto::timeOfOrder))
+                .toList();
+    }
+
+    public List<OrderDto> getAllOrders() {
+        return orderRepository.findAll()
+                .stream()
+                .map(this::toOrderDto)
+                .sorted(Comparator.comparing(OrderDto::timeOfOrder))
+                .toList();
     }
 }
