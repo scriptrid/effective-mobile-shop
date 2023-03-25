@@ -128,6 +128,7 @@ public class OrganizationService {
                 entity.getId(),
                 entity.getName(),
                 entity.getIsFrozen(),
+                entity.getIsDeleted(),
                 entity.getOwnerId(),
                 entity.getDescription()
         );

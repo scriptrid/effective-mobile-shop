@@ -38,15 +38,13 @@ public class ProductEntity {
     @Column(name = "specs")
     private String specs;
 
-
+    @Column(name = "organization_id", nullable = false)
+    private long organizationId;
 
     @ElementCollection
     @Column(name = "tag")
     @CollectionTable(name = "product_tags", joinColumns = @JoinColumn(name = "product_id"))
     private Set<String> tags = new LinkedHashSet<>();
-
-    @Column(name = "organization_id", nullable = false)
-    private long organizationId;
 
     @Override
     public boolean equals(Object o) {
@@ -55,7 +53,6 @@ public class ProductEntity {
         ProductEntity that = (ProductEntity) o;
         return getId() != null && Objects.equals(getId(), that.getId());
     }
-
     @Override
     public int hashCode() {
         return getClass().hashCode();

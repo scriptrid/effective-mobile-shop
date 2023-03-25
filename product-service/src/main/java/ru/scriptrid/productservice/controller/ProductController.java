@@ -6,10 +6,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import ru.scriptrid.common.dto.ProductDto;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
 import ru.scriptrid.productservice.model.dto.ProductCreateDto;
-import ru.scriptrid.common.dto.ProductDto;
 import ru.scriptrid.productservice.service.ProductService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/product")
@@ -22,9 +24,9 @@ public class ProductController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<ProductDto> newProduct(@AuthenticationPrincipal JwtAuthenticationToken token,
+    public ResponseEntity<ProductDto> newRequestProduct(@AuthenticationPrincipal JwtAuthenticationToken token,
                                                  @RequestBody @Valid ProductCreateDto dto) {
-        ProductDto productDto = productService.addProduct(token, dto);
+        ProductDto productDto = productService.addRequest(token, dto);
         return ResponseEntity.ok(productDto);
     }
 
@@ -49,6 +51,36 @@ public class ProductController {
         ProductDto dto = productService.getProductDto(id);
         return ResponseEntity.ok(dto);
     }
+
+    @GetMapping("/all")
+    public List<ProductDto> getAllProducts() {
+        return productService.getAllProducts();
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @GetMapping("/requests")
+    public List<ProductDto> getAllRequests() {
+        return productService.getAllRequests();
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @GetMapping("/request/{id}")
+    public ProductDto getAllRequests(@PathVariable long id) {
+        return productService.getRequest(id);
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PostMapping("/request/{id}")
+    public ProductDto acceptRequest(@PathVariable long id) {
+        return productService.addProduct(id);
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @DeleteMapping("/request/{id}")
+    public void rejectRequest(@PathVariable long id) {
+        productService.rejectRequest(id);
+    }
+
 
     @PreAuthorize("hasAuthority('ROLE_SERVICE')")
     @PutMapping("/{id}/reserve")
