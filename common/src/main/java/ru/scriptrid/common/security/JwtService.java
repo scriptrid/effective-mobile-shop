@@ -25,7 +25,7 @@ public class JwtService {
     public String generateUserToken(UserDto dto) throws IllegalArgumentException, MalformedJwtException {
 
         return Jwts.builder()
-                .setSubject(String.valueOf(dto.id()))
+                .claim("id", dto.id())
                 .claim("username", dto.username())
                 .claim("email", dto.email())
                 .claim("isAdmin", dto.isAdmin())
@@ -38,7 +38,7 @@ public class JwtService {
 
     public String generateServiceToken() throws IllegalArgumentException, MalformedJwtException {
         return Jwts.builder()
-                .setSubject(issuer)
+                .claim("id", -1)
                 .claim("username", issuer)
                 .claim("email", issuer + "@shop.io")
                 .claim("isAdmin", true)

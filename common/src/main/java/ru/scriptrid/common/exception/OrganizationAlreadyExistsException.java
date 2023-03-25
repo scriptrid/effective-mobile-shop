@@ -7,4 +7,8 @@ public class OrganizationAlreadyExistsException extends RuntimeException {
     public OrganizationAlreadyExistsException(String organizationName) {
         this.organizationName = organizationName;
     }
+
+    public String getOrganizationName() {
+        return organizationName;
+    }
 }

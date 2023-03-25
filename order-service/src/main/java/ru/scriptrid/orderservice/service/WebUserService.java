@@ -11,6 +11,8 @@ import reactor.core.publisher.Mono;
 import ru.scriptrid.common.dto.UserDto;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
 
+import java.math.BigDecimal;
+
 @Service
 @Slf4j
 public class WebUserService {
@@ -32,5 +34,8 @@ public class WebUserService {
                         e -> e.getStatusCode().equals(HttpStatus.NOT_FOUND) ? Mono.empty() : Mono.error(e))
                 .block();
 
+    }
+
+    public void transferMoney(long customerId, long sellerId, BigDecimal total, BigDecimal sellersIncome) {
     }
 }

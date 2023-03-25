@@ -1,7 +1,7 @@
 package ru.scriptrid.orderservice.model.dto;
 
 public record OrderCreateDto(
-        long id,
+        long productId,
         int quantity
 ) {
 }

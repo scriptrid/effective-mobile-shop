@@ -7,7 +7,7 @@ public record OrganizationDto(
 
         boolean isFrozen,
 
-        String owner,
+        long ownerId,
 
         String description) {
 }

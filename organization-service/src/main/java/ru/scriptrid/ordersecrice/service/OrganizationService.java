@@ -55,9 +55,9 @@ public class OrganizationService {
             organizationRepository.deleteById(id);
             return;
         }
-        if (!isValidOwner(token.getUsername(), id)) {
+        if (!isValidOwner(token.getId(), id)) {
             log.info("User \"{}\" is not an owner of organization with id \"{}\"", token.getUsername(), id);
-            throw new InvalidOwnerException(id, getOrganization(id).getOwner(), token.getUsername() );
+            throw new InvalidOwnerException(id, getOrganization(id).getOwnerId(), token.getId() );
         }
         log.info("The organization with id \"{}\" was deleted by owner {}", id, token.getUsername());
         organizationRepository.deleteById(id);
@@ -73,21 +73,21 @@ public class OrganizationService {
 
         if (token.isAdmin()) {
             log.info("The organization with id \"{}\" was edited by admin \"{}\"", id, token.getUsername());
-            return toOrganizationDto(modifyEntity(entity, token.getUsername(), dto));
+            return toOrganizationDto(modifyEntity(entity, token.getId(), dto));
         }
         if (organizationIsFrozen(id)) {
             log.info("Organization with id \"{}\" is frozen", id);
             throw new FrozenOrganizationException();
         }
-        if (!isValidOwner(token.getUsername(), id)) {
+        if (!isValidOwner(token.getId(), id)) {
             log.info("User \"{}\" is not an owner of \"{}\" organization", token.getUsername(), entity.getName());
-            throw new InvalidOwnerException(id, entity.getOwner(), token.getUsername());
+            throw new InvalidOwnerException(id, entity.getOwnerId(), token.getId());
         }
         if (organizationRepository.existsByName(dto.name())) {
             log.info("The organization with new name \"{}\" already exists", dto.name());
             throw new OrganizationAlreadyExistsException(dto.name());
         }
-        return toOrganizationDto(modifyEntity(entity, token.getUsername(), dto));
+        return toOrganizationDto(modifyEntity(entity, token.getId(), dto));
     }
 
 
@@ -111,9 +111,9 @@ public class OrganizationService {
         return toOrganizationDto(getOrganization(id));
     }
 
-    private OrganizationEntity modifyEntity(OrganizationEntity entity, String owner, EditOrganizationDto dto) {
+    private OrganizationEntity modifyEntity(OrganizationEntity entity, long ownerId, EditOrganizationDto dto) {
         entity.setName(dto.name());
-        entity.setOwner(owner);
+        entity.setOwnerId(ownerId);
         if (dto.description() != null) {
             entity.setDescription(dto.description());
         } else {
@@ -127,7 +127,7 @@ public class OrganizationService {
                 entity.getId(),
                 entity.getName(),
                 entity.getIsFrozen(),
-                entity.getOwner(),
+                entity.getOwnerId(),
                 entity.getDescription()
         );
     }
@@ -140,7 +140,7 @@ public class OrganizationService {
         } else {
             entity.setDescription("Empty description");
         }
-        entity.setOwner(request.organizationOwner());
+        entity.setOwnerId(request.organizationOwner());
         return entity;
     }
 
@@ -158,8 +158,8 @@ public class OrganizationService {
                 .orElseThrow(() -> new OrganizationNotFoundByIdException(id));
     }
 
-    public boolean isValidOwner(String username, long organizationId) {
-        return username.equals(getOrganization(organizationId).getOwner());
+    public boolean isValidOwner(long userId, long organizationId) {
+        return userId == getOrganization(organizationId).getOwnerId();
     }
 
 

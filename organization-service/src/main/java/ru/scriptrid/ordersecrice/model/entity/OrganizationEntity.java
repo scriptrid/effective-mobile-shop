@@ -21,7 +21,7 @@ public class OrganizationEntity {
     private String name;
 
     @Column(name = "owner", nullable = false)
-    private String owner;
+    private Long ownerId;
 
     @Lob
     @Column(name = "description")

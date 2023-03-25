@@ -6,4 +6,8 @@ public class OrganizationNotFoundByIdException extends RuntimeException {
     public OrganizationNotFoundByIdException(long id) {
         this.id = id;
     }
+
+    public long getId() {
+        return id;
+    }
 }

@@ -4,6 +4,6 @@ public record RequestOrganizationDto(
         long requestId,
         String organizationName,
         String organizationDescription,
-        String organizationOwner
+        long organizationOwner
 ) {
 }

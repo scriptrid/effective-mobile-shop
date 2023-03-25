@@ -33,6 +33,10 @@ public class WebProductService {
                 .block();
     }
 
-    public void reserveProduct(long id) {
+    public void reserveProduct(long id) { //TODO
+    }
+
+    public void returnProduct(long productId) {
+
     }
 }

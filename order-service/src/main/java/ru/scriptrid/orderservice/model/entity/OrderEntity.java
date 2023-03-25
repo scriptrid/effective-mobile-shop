@@ -15,7 +15,7 @@ public class OrderEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "order_entity_seq")
     @SequenceGenerator(name = "order_entity_seq")
-    @Column(name = "id", nullable = false)
+    @Column(name = "productId", nullable = false)
     private Long id;
 
     @Column(name = "product_id", nullable = false)

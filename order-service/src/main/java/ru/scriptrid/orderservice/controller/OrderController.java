@@ -22,7 +22,7 @@ public class OrderController {
 
     @PostMapping()
     public OrderDto addOrder(@AuthenticationPrincipal JwtAuthenticationToken token, @RequestBody OrderCreateDto dto) {
-        return orderService.addOrder(token, dto);
+        return orderService.addOrder(dto, token);
     }
 
 }

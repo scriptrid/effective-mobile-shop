@@ -13,7 +13,7 @@ import java.util.List;
 
 public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 
-    private final int id;
+    private final long id;
 
     private final String username;
 
@@ -30,7 +30,7 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
     public JwtAuthenticationToken(Claims claims, String jwt) {
 
         super(Collections.emptyList());
-        this.id = Integer.parseInt(claims.getSubject());
+        this.id = claims.get("id", Long.class);
         this.username = claims.get("username", String.class);
         this.email = claims.get("email", String.class);
         this.isAdmin = claims.get("isAdmin", Boolean.class);
@@ -86,7 +86,7 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
         return email;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
