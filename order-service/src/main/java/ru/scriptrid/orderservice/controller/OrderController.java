@@ -1,5 +1,6 @@
 package ru.scriptrid.orderservice.controller;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -8,6 +9,7 @@ import ru.scriptrid.orderservice.model.dto.OrderCreateDto;
 import ru.scriptrid.orderservice.model.dto.OrderDto;
 import ru.scriptrid.orderservice.service.OrderService;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @RestController
@@ -25,11 +27,6 @@ public class OrderController {
         return orderService.addOrder(dto, token);
     }
 
-    @GetMapping("/my")
-    public List<OrderDto> getUsersOrders(@AuthenticationPrincipal JwtAuthenticationToken token) {
-        return orderService.getUsersOrders(token.getId());
-    }
-
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/all")
     public List<OrderDto> getAllOrders() {
@@ -42,4 +39,13 @@ public class OrderController {
         return orderService.getUsersOrders(id);
     }
 
+    @GetMapping("/my")
+    public List<OrderDto> getUsersOrders(@AuthenticationPrincipal JwtAuthenticationToken token) {
+        return orderService.getUsersOrders(token.getId());
+    }
+
+    @PutMapping("/my/{id}")
+    public ResponseEntity<OrderDto> refundOrder(@AuthenticationPrincipal JwtAuthenticationToken token, @PathVariable long orderId) {
+        return ResponseEntity.ok(orderService.refundOrder(token.getId(), orderId, ZonedDateTime.now()));
+    }
 }

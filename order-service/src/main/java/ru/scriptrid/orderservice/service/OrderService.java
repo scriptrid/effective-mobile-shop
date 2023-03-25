@@ -8,7 +8,13 @@ import ru.scriptrid.common.dto.OrganizationDto;
 import ru.scriptrid.common.dto.ProductDto;
 import ru.scriptrid.common.dto.TransactionCreateDto;
 import ru.scriptrid.common.dto.UserDto;
+import ru.scriptrid.common.exception.FrozenOrganizationException;
+import ru.scriptrid.common.exception.FrozenUserException;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
+import ru.scriptrid.orderservice.exceptions.InvalidCustomerException;
+import ru.scriptrid.orderservice.exceptions.OrderNotFoundException;
+import ru.scriptrid.orderservice.exceptions.RefundTimeException;
+import ru.scriptrid.orderservice.exceptions.TransactionNotFoundException;
 import ru.scriptrid.orderservice.model.dto.OrderCreateDto;
 import ru.scriptrid.orderservice.model.dto.OrderDto;
 import ru.scriptrid.orderservice.model.entity.OrderEntity;
@@ -17,6 +23,7 @@ import ru.scriptrid.orderservice.repository.OrderRepository;
 import ru.scriptrid.orderservice.repository.TransactionRepository;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -46,11 +53,51 @@ public class OrderService {
     @Transactional
     public OrderDto addOrder(OrderCreateDto dto, JwtAuthenticationToken token) {
         ProductDto product = webProductService.getDto(dto.productId());
-        OrganizationDto sellersOrganization = webOrganizationService.getDto(product.organizationId());
-        UserDto seller = webUserService.getDto(sellersOrganization.ownerId());
-        webProductService.reserveProduct(dto.productId(), dto.quantity());
-        return addReservedOrder(dto, product,  seller.id(), token.getId());
 
+        OrganizationDto sellersOrganization = webOrganizationService.getDto(product.organizationId());
+        if (sellersOrganization.isFrozen()) {
+            log.warn("Seller organization with id \"{}\" is frozen", sellersOrganization.id());
+            throw new FrozenOrganizationException(sellersOrganization.id());
+        }
+
+        UserDto seller = webUserService.getDto(sellersOrganization.ownerId());
+        if (seller.isFrozen()) {
+            log.warn("Seller user with id \"{}\" is frozen", seller.id());
+            throw new FrozenUserException(seller.id());
+        }
+
+        webProductService.reserveProduct(dto.productId(), dto.quantity());
+        return addReservedOrder(dto, product, seller.id(), token.getId());
+
+    }
+
+    @Transactional
+    public OrderDto refundOrder(long customerId, long orderId, ZonedDateTime timeOfRequest) {
+        if (!orderRepository.existsById(orderId)) {
+            log.warn("The order with id \"{}\" not found", orderId);
+            throw new OrderNotFoundException(orderId);
+        }
+
+        OrderEntity order = getOrderById(orderId);
+
+        if (customerId != order.getCustomerId()) {
+            log.warn("The user with id \"{}\" is not the customer of order with id \"{}\"", customerId, orderId);
+            throw new InvalidCustomerException(order.getId(), customerId);
+        }
+        if (Duration.between(timeOfRequest, order.getTimeOfOrder()).toDays() > 1) {
+            log.warn("The time since order with id \"{}\" is greater than 1 day", orderId);
+            throw new RefundTimeException(Duration.between(timeOfRequest, order.getTimeOfOrder()));
+        }
+        order.setIsReturned(true);
+        TransactionEntity orderTransaction = getTransaction(order.getTransactionId());
+        TransactionCreateDto transactionCreateDto = new TransactionCreateDto(
+                orderTransaction.getCustomerId(),
+                orderTransaction.getSellerId(),
+                orderTransaction.getTotal().multiply(BigDecimal.valueOf(-1)),
+                orderTransaction.getSellersIncome().multiply(BigDecimal.valueOf(-1))
+        );
+        webUserService.transferMoney(transactionCreateDto);
+        return toOrderDto(order);
     }
 
     private OrderDto addReservedOrder(OrderCreateDto dto, ProductDto product, long sellerId, long customerId) {
@@ -70,6 +117,7 @@ public class OrderService {
             throw e;
         }
     }
+
 
     private OrderDto toOrderDto(OrderEntity entity) {
         return new OrderDto(
@@ -121,5 +169,23 @@ public class OrderService {
                 .map(this::toOrderDto)
                 .sorted(Comparator.comparing(OrderDto::timeOfOrder))
                 .toList();
+    }
+
+    private TransactionEntity getTransaction(long id) {
+        return transactionRepository.findById(id).orElseThrow(
+                () -> {
+                    log.warn("Transaction with id \"{}\" not found", id);
+                    return new TransactionNotFoundException(id);
+                }
+        );
+    }
+
+    private OrderEntity getOrderById(long orderId) {
+        return orderRepository.findById(orderId).orElseThrow(
+                () -> {
+                    log.warn("The order with id \"{}\" not found", orderId);
+                    return new OrderNotFoundException(orderId);
+                }
+        );
     }
 }

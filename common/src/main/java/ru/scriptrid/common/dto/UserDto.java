@@ -4,6 +4,8 @@ public record UserDto(
         long id,
         String username,
         String email,
-        boolean isAdmin
+        boolean isAdmin,
+        boolean isFrozen,
+        boolean isDeleted
 ) {
 }

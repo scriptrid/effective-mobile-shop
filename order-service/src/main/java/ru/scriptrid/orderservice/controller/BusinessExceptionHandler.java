@@ -5,30 +5,31 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import ru.scriptrid.common.exception.FrozenOrganizationException;
-import ru.scriptrid.common.exception.InvalidOwnerException;
-import ru.scriptrid.common.exception.OrganizationAlreadyExistsException;
-import ru.scriptrid.common.exception.OrganizationNotFoundByIdException;
+import ru.scriptrid.common.exception.FrozenUserException;
+import ru.scriptrid.orderservice.exceptions.OrderNotFoundException;
+import ru.scriptrid.orderservice.exceptions.RefundTimeException;
 
 
 @ControllerAdvice
 public class BusinessExceptionHandler extends ResponseEntityExceptionHandler {
-    @ExceptionHandler(OrganizationAlreadyExistsException.class)
-    public ResponseEntity<Void> onOrganizationExists() {
-        return ResponseEntity.badRequest().build();
-    }
-
-    @ExceptionHandler(OrganizationNotFoundByIdException.class)
-    public ResponseEntity<Void> onOrganizationNotFound() {
-        return ResponseEntity.notFound().build();
-    }
 
     @ExceptionHandler(FrozenOrganizationException.class)
     public ResponseEntity<Void> onFrozenOrganization() {
         return ResponseEntity.badRequest().build();
     }
-
-    @ExceptionHandler(InvalidOwnerException.class)
-    public ResponseEntity<Void> onInvalidOwner() {
+    @ExceptionHandler(FrozenUserException.class)
+    public ResponseEntity<Void> onFrozenUser() {
         return ResponseEntity.badRequest().build();
     }
+
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<Void> onNotFoundOrder() {
+        return ResponseEntity.notFound().build();
+    }
+
+    @ExceptionHandler(RefundTimeException.class)
+    public ResponseEntity<Void> onRefundTimeGreaterThanOneDay() {
+        return ResponseEntity.status(412).build();
+    }
+
 }

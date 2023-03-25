@@ -50,9 +50,10 @@ public class OrganizationService {
             log.info("The organization with id \"{}\" was not found", id);
             throw new OrganizationNotFoundByIdException(id);
         }
+        OrganizationEntity organization = getOrganization(id);
         if (token.isAdmin()) {
             log.info("The organization with id \"{}\" was deleted by admin {}", id, token.getUsername());
-            organizationRepository.deleteById(id);
+            organization.setIsDeleted(true);
             return;
         }
         if (!isValidOwner(token.getId(), id)) {
@@ -60,7 +61,7 @@ public class OrganizationService {
             throw new InvalidOwnerException(id, getOrganization(id).getOwnerId(), token.getId() );
         }
         log.info("The organization with id \"{}\" was deleted by owner {}", id, token.getUsername());
-        organizationRepository.deleteById(id);
+        organization.setIsDeleted(true);
     }
 
     @Transactional
@@ -77,7 +78,7 @@ public class OrganizationService {
         }
         if (organizationIsFrozen(id)) {
             log.info("Organization with id \"{}\" is frozen", id);
-            throw new FrozenOrganizationException();
+            throw new FrozenOrganizationException(id);
         }
         if (!isValidOwner(token.getId(), id)) {
             log.info("User \"{}\" is not an owner of \"{}\" organization", token.getUsername(), entity.getName());

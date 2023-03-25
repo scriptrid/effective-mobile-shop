@@ -40,7 +40,7 @@ public class ProductService {
         }
         if (organizationDto.isFrozen()) {
             log.info("Organization with id \"{}\" is frozen", dto.organizationId());
-            throw new FrozenOrganizationException();
+            throw new FrozenOrganizationException(dto.organizationId());
         }
         if (organizationDto.ownerId() != token.getId()) {
             log.info("User \"{}\" is not an owner of organization with id \"{}\"", token.getUsername(), dto.organizationId());
@@ -76,7 +76,7 @@ public class ProductService {
         }
         if (newOrganizationDto.isFrozen()) {
             log.info("Organization with id \"{}\" is frozen", dto.organizationId());
-            throw new FrozenOrganizationException();
+            throw new FrozenOrganizationException(dto.organizationId());
         }
 
         if (oldOrganizationDto.ownerId() != token.getId()) {

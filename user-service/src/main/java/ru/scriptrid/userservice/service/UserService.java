@@ -92,7 +92,9 @@ public class UserService implements UserDetailsService {
                 entity.getId(),
                 entity.getUsername(),
                 entity.getEmail(),
-                entity.getIsAdmin()
+                entity.getIsAdmin(),
+                entity.getIsFrozen(),
+                entity.getIsDeleted()
         );
     }
 

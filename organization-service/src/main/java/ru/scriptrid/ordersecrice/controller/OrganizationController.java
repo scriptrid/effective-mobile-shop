@@ -33,7 +33,7 @@ public class OrganizationController {
     public ResponseEntity<Void> deleteOrganization(@AuthenticationPrincipal JwtAuthenticationToken token,
                                                    @PathVariable long id) {
         organizationService.deleteOrganization(token, id);
-        return ResponseEntity.noContent().build(); //TODO Повесить isDeleted вместо удаления из базы данных
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")
