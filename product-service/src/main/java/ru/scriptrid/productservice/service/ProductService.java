@@ -4,14 +4,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.scriptrid.common.dto.OrganizationDto;
+import ru.scriptrid.common.dto.ProductDto;
 import ru.scriptrid.common.exception.FrozenOrganizationException;
 import ru.scriptrid.common.exception.InvalidOwnerException;
 import ru.scriptrid.common.exception.OrganizationNotFoundByIdException;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
+import ru.scriptrid.productservice.exceptions.InsufficientQuantityException;
 import ru.scriptrid.productservice.exceptions.ProductAlreadyExistsException;
 import ru.scriptrid.productservice.exceptions.ProductNotFoundByIdException;
 import ru.scriptrid.productservice.model.dto.ProductCreateDto;
-import ru.scriptrid.productservice.model.dto.ProductDto;
 import ru.scriptrid.productservice.model.entity.ProductEntity;
 import ru.scriptrid.productservice.repository.ProductRepository;
 
@@ -59,7 +60,7 @@ public class ProductService {
         ProductEntity product = productRepository.findById(id).orElseThrow(
                 () -> {
                     log.info("The product to be edited with id \"{}\" was not found", id);
-                    throw new ProductNotFoundByIdException(id);
+                    return new ProductNotFoundByIdException(id);
                 }
         );
 
@@ -96,12 +97,7 @@ public class ProductService {
 
     @Transactional
     public void deleteProduct(JwtAuthenticationToken token, long id) {
-        ProductEntity product = productRepository.findById(id).orElseThrow(
-                () -> {
-                    log.info("The product to be edited with id \"{}\" was not found", id);
-                    throw new ProductNotFoundByIdException(id);
-                }
-        );
+        ProductEntity product = getProductEntity(id);
         OrganizationDto organizationDto = webOrganizationService.getDto(product.getOrganizationId());
         if (token.isAdmin()) {
             productRepository.deleteById(id);
@@ -113,15 +109,34 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
+    @Transactional
+    public void reserveProduct(long id, int quantity) {
+        ProductEntity productEntity = getProductEntity(id);
+        if (productEntity.getQuantityInStock() < quantity) {
+            throw new InsufficientQuantityException(productEntity.getQuantityInStock(), quantity);
+        }
+        productEntity.setQuantityInStock(productEntity.getQuantityInStock() - quantity);
+    }
+
+    @Transactional
+    public void returnProduct(long id, int quantity) {
+        ProductEntity productEntity = getProductEntity(id);
+        productEntity.setQuantityInStock(productEntity.getQuantityInStock() + quantity);
+    }
+
     public ProductDto getProductDto(long id) {
-        ProductEntity product = productRepository.findById(id).orElseThrow(
-                () -> {
-                    log.info("The product to be edited with id \"{}\" was not found", id);
-                    throw new ProductNotFoundByIdException(id);
-                }
-        );
+        ProductEntity product = getProductEntity(id);
         return toProductDto(product);
 
+    }
+
+    private ProductEntity getProductEntity(long id) {
+        return productRepository.findById(id).orElseThrow(
+                () -> {
+                    log.info("The product with id \"{}\" was not found", id);
+                    return new ProductNotFoundByIdException(id);
+                }
+        );
     }
 
     private ProductDto toProductDto(ProductEntity entity) {
@@ -142,7 +157,6 @@ public class ProductService {
         modifyEntity(entity, dto);
         return entity;
     }
-
     private ProductEntity modifyEntity(ProductEntity entity, ProductCreateDto dto) {
         entity.setProductName(dto.productName());
 

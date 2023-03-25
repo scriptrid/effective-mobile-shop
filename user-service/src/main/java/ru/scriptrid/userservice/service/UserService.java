@@ -12,7 +12,7 @@ import ru.scriptrid.userservice.exceptions.UserNotFoundByUsernameException;
 import ru.scriptrid.userservice.exceptions.UsernameAlreadyExistsException;
 import ru.scriptrid.userservice.model.UserDetailsImpl;
 import ru.scriptrid.userservice.model.dto.CreateUserDto;
-import ru.scriptrid.userservice.model.dto.UserDto;
+import ru.scriptrid.common.dto.UserDto;
 import ru.scriptrid.userservice.model.entity.UserEntity;
 import ru.scriptrid.userservice.repository.UserRepository;
 

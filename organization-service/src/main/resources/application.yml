@@ -18,5 +18,6 @@ logging:
   level:
     org.springframework.security: DEBUG
 
-jwt-secretcode: really_big_secret_code_trust_me_i_always_right
-jwt-issuer: user-service/shop/effective-mobile
+jwt:
+  secretcode: really_big_secret_code_trust_me_i_always_right
+  issuer: organization-service

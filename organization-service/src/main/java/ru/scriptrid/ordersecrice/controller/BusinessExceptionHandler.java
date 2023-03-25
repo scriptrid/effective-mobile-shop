@@ -8,8 +8,6 @@ import ru.scriptrid.common.exception.FrozenOrganizationException;
 import ru.scriptrid.common.exception.InvalidOwnerException;
 import ru.scriptrid.common.exception.OrganizationAlreadyExistsException;
 import ru.scriptrid.common.exception.OrganizationNotFoundByIdException;
-import ru.scriptrid.ordersecrice.exceptions.OrganizationsNotFoundException;
-import ru.scriptrid.ordersecrice.exceptions.RequestsNotFoundException;
 
 
 @ControllerAdvice
@@ -32,16 +30,6 @@ public class BusinessExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(InvalidOwnerException.class)
     public ResponseEntity<Void> onInvalidOwner() {
         return ResponseEntity.badRequest().build();
-    }
-
-    @ExceptionHandler(RequestsNotFoundException.class)
-    public ResponseEntity<Void> onNoSuchRequests() {
-        return ResponseEntity.notFound().build();
-    }
-
-    @ExceptionHandler(OrganizationsNotFoundException.class)
-    public ResponseEntity<Void> onNoSuchOrganizations() {
-        return ResponseEntity.notFound().build();
     }
 
 }

@@ -1,12 +1,14 @@
 package ru.scriptrid.productservice.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
 import ru.scriptrid.productservice.model.dto.ProductCreateDto;
-import ru.scriptrid.productservice.model.dto.ProductDto;
+import ru.scriptrid.common.dto.ProductDto;
 import ru.scriptrid.productservice.service.ProductService;
 
 @RestController
@@ -19,7 +21,7 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @PostMapping("/new")
+    @PostMapping("/")
     public ResponseEntity<ProductDto> newProduct(@AuthenticationPrincipal JwtAuthenticationToken token,
                                                  @RequestBody @Valid ProductCreateDto dto) {
         ProductDto productDto = productService.addProduct(token, dto);
@@ -47,4 +49,17 @@ public class ProductController {
         ProductDto dto = productService.getProductDto(id);
         return ResponseEntity.ok(dto);
     }
+
+    @PreAuthorize("hasAuthority('ROLE_SERVICE')")
+    @PutMapping("/{id}/reserve")
+    public void reserveProduct(@PathVariable long id, @RequestBody @Valid @Min(1) int quantity) {
+        productService.reserveProduct(id, quantity);
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_SERVICE')")
+    @PutMapping("/{id}/return")
+    public void returnProduct(@PathVariable long id, @RequestBody @Valid @Min(1) int quantity) {
+        productService.returnProduct(id, quantity);
+    }
+
 }

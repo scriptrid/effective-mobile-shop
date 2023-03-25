@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.scriptrid.userservice.model.dto.CreateUserDto;
 import ru.scriptrid.userservice.model.dto.LoginUserDto;
-import ru.scriptrid.userservice.model.dto.UserDto;
-import ru.scriptrid.userservice.security.JwtUtility;
+import ru.scriptrid.common.dto.UserDto;
+import ru.scriptrid.common.security.JwtService;
 import ru.scriptrid.userservice.service.UserService;
 
 
@@ -24,18 +24,18 @@ import ru.scriptrid.userservice.service.UserService;
 public class AuthController {
 
     private final UserService userService;
-    private final JwtUtility jwtUtility;
+    private final JwtService jwtService;
 
-    public AuthController(UserService userService, JwtUtility jwtUtility) {
+    public AuthController(UserService userService, JwtService jwtService) {
         this.userService = userService;
-        this.jwtUtility = jwtUtility;
+        this.jwtService = jwtService;
     }
 
 
     @PostMapping("/register")
     public ResponseEntity<UserDto> newUser(@RequestBody @Valid CreateUserDto dto) {
         UserDto user = userService.addUser(dto);
-        String token = jwtUtility.generateToken(user);
+        String token = jwtService.generateUserToken(user);
         return ResponseEntity.ok().header("Authorization", token).body(user);
     }
 
@@ -46,7 +46,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         UserDto user = userService.getUserDtoByUsername(dto.username());
-        String token = jwtUtility.generateToken(user);
+        String token = jwtService.generateUserToken(user);
         return ResponseEntity.ok().header("Authorization", token).body(user);
     }
 

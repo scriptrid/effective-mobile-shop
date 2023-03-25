@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.scriptrid.common.exception.OrganizationAlreadyExistsException;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
-import ru.scriptrid.ordersecrice.exceptions.RequestsNotFoundException;
 import ru.scriptrid.ordersecrice.exceptions.RequestOrganizationNotFoundException;
 import ru.scriptrid.ordersecrice.model.dto.RequestOrganizationCreateDto;
 import ru.scriptrid.ordersecrice.model.dto.RequestOrganizationDto;
@@ -56,9 +55,7 @@ public class RequestService {
 
     public List<RequestOrganizationDto> getRequests() {
         List<RequestOrganizationEntity> requests = requestOrganizationRepository.findAll();
-        if (requests.isEmpty()) {
-            throw new RequestsNotFoundException();
-        }
+
         return requests.stream()
                 .map(this::toDto)
                 .toList();

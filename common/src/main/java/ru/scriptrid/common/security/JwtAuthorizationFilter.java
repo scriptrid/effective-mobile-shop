@@ -20,12 +20,8 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
-    @Value("${jwt-secretcode}")
+    @Value("${jwt.secretcode}")
     private String secret;
-
-    @Value("${jwt-issuer}")
-    private String issuer;
-
 
 
     @Override
@@ -55,7 +51,6 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     private Claims parseToken(String token) throws JwtException {
         Jws<Claims> jwt = Jwts.parserBuilder()
                 .setSigningKey(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
-                .requireIssuer(issuer)
                 .build()
                 .parseClaimsJws(token);
 

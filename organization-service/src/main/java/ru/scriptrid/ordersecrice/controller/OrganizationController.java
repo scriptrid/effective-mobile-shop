@@ -56,7 +56,7 @@ public class OrganizationController {
         OrganizationDto dto = organizationService.getOrganizationDto(id);
         return ResponseEntity.ok(dto);
     }
-
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping
     public ResponseEntity<List<OrganizationDto>> getOrganizations() {
         return ResponseEntity.ok(organizationService.getOrganizationsDto());

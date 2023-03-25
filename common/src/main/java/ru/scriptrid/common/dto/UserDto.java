@@ -1,4 +1,4 @@
-package ru.scriptrid.userservice.model.dto;
+package ru.scriptrid.common.dto;
 
 public record UserDto(
         long id,

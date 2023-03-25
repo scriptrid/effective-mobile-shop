@@ -5,7 +5,9 @@ import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -19,23 +21,29 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 
     private final boolean isAdmin;
 
+    private final boolean isService;
+
     private final String jwt;
 
-    private final List<GrantedAuthority> authorities;
+    private final List<GrantedAuthority> authorities = new ArrayList<>();
 
     public JwtAuthenticationToken(Claims claims, String jwt) {
 
-        super(null);
+        super(Collections.emptyList());
         this.id = Integer.parseInt(claims.getSubject());
         this.username = claims.get("username", String.class);
         this.email = claims.get("email", String.class);
         this.isAdmin = claims.get("isAdmin", Boolean.class);
+        this.isService = claims.get("isService", Boolean.class);
         this.jwt = jwt;
 
+        this.authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+
         if (isAdmin) {
-            this.authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"), new SimpleGrantedAuthority("ROLE_ADMIN"));
-        } else {
-            this.authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+            this.authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        }
+        if (isService) {
+            this.authorities.add(new SimpleGrantedAuthority("ROLE_SERVICE"));
         }
 
     }
@@ -88,6 +96,10 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 
     public boolean isAdmin() {
         return isAdmin;
+    }
+
+    public boolean isService() {
+        return isService;
     }
 
     @Override

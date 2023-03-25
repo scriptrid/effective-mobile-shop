@@ -4,7 +4,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
-import ru.scriptrid.userservice.model.dto.UserDto;
+import ru.scriptrid.common.dto.UserDto;
 import ru.scriptrid.userservice.service.UserService;
 
 import java.math.BigDecimal;
@@ -39,7 +39,6 @@ public class UserController {
         userService.deleteUser(id);
     }
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/{id}")
     public UserDto getUser(@PathVariable long id) {
         return userService.getUserDtoById(id);
