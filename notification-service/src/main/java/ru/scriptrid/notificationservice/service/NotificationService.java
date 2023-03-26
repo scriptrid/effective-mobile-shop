@@ -46,12 +46,14 @@ public class NotificationService {
     @Transactional
     public NotificationDto getNotification(JwtAuthenticationToken token, long id) {
         NotificationEntity notification = getNotificationById(id);
-        if (token.getId() != notification.getDestinationId()) {
-            if (token.isAdmin()) {
-                return toDto(notification);
-            }
+        if (token.getId() != notification.getDestinationId() && !token.isAdmin()) {
             log.warn("User with id \"{}\" is not an owner of notification with id \"{}\"", token.getId(), id);
             throw new InvalidOwnerException(id, notification.getDestinationId(), token.getId());
+        }
+        UserDto notificationOwner = webUserService.getDto(notification.getDestinationId());
+        if (notificationOwner.isFrozen()) {
+            log.warn("User with id \"{}\" is frozen", notificationOwner.id());
+            throw new FrozenUserException(notificationOwner.id());
         }
         return toDto(notification);
     }
@@ -90,10 +92,7 @@ public class NotificationService {
             log.warn("User with id \"{}\" is deleted", userId);
             throw new DeletedUserException(userId);
         }
-        if (token.getId() != userId) {
-            if (token.isAdmin()) {
-                return getNotificationsByUserId(userId);
-            }
+        if (token.getId() != userId && !token.isAdmin()) {
             log.warn("User with id \"{}\" tried to get other user`s with id \"{}\" notifications ", token.getId(), userId);
             throw new InvalidUserException(userId, token.getId());
         }

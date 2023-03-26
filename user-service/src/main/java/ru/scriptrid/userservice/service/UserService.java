@@ -126,5 +126,11 @@ public class UserService implements UserDetailsService {
                 .map(this::toUserDto)
                 .toList();
     }
+
+    public boolean isAbleToLogIn(String username) {
+        return userRepository.findByUsername(username)
+                .map(user -> !user.getIsFrozen() && !user.getIsDeleted())
+                .orElse(false);
+    }
 }
 

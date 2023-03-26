@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.scriptrid.userservice.model.dto.CreateUserDto;
-import ru.scriptrid.userservice.model.dto.LoginUserDto;
 import ru.scriptrid.common.dto.UserDto;
 import ru.scriptrid.common.security.JwtService;
+import ru.scriptrid.userservice.model.dto.CreateUserDto;
+import ru.scriptrid.userservice.model.dto.LoginUserDto;
 import ru.scriptrid.userservice.service.UserService;
 
 
@@ -65,10 +65,14 @@ public class AuthController {
     }
 
     private boolean doLogin(HttpServletRequest req, String username, String password) {
+        if (!userService.isAbleToLogIn(username)) {
+            log.warn("User \"{}\" was not able to login", username);
+            return false;
+        }
         try {
             req.login(username, password);
         } catch (ServletException e) {
-            log.error("Error while login", e);
+            log.warn("Error while login", e);
             return false;
         }
         return true;
