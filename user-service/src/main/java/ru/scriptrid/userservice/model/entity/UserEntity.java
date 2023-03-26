@@ -30,7 +30,6 @@ public class UserEntity {
     private Boolean isAdmin = false;
 
 
-
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
@@ -39,5 +38,6 @@ public class UserEntity {
 
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;
+
 
 }
