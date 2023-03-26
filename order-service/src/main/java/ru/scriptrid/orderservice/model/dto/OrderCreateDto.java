@@ -1,4 +1,4 @@
-package ru.scriptrid.reviewservice.model.dto;
+package ru.scriptrid.orderservice.model.dto;
 
 public record OrderCreateDto(
         long productId,

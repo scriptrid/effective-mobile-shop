@@ -1,4 +1,4 @@
-package ru.scriptrid.reviewservice.exceptions;
+package ru.scriptrid.orderservice.exceptions;
 
 import lombok.Getter;
 

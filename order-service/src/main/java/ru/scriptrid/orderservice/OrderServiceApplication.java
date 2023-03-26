@@ -1,4 +1,4 @@
-package ru.scriptrid.reviewservice;
+package ru.scriptrid.orderservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

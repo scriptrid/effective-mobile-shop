@@ -1,4 +1,4 @@
-package ru.scriptrid.reviewservice.service;
+package ru.scriptrid.orderservice.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +16,7 @@ import ru.scriptrid.common.dto.TransactionDto;
 import ru.scriptrid.common.dto.UserDto;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
 import ru.scriptrid.common.security.JwtService;
+import ru.scriptrid.orderservice.exceptions.FailedTransactionException;
 
 
 @Service
@@ -45,14 +46,18 @@ public class WebUserService {
 
     public TransactionDto transferMoney(TransactionCreateDto dto) {
         String jwt = jwtService.generateServiceToken();
-        return webClient.put()
-                .uri("/api/transaction/transfer")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(dto))
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
-                .retrieve()
-                .bodyToMono(TransactionDto.class)
-                .block();
+        try {
+            return webClient.put()
+                    .uri("/api/transaction/transfer")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(BodyInserters.fromValue(dto))
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
+                    .retrieve()
+                    .bodyToMono(TransactionDto.class)
+                    .block();
+        } catch (WebClientResponseException.BadRequest e) {
+            throw new FailedTransactionException(e, dto.customerId(), dto.sellerId(), dto.total(), dto.sellersIncome());
+        }
     }
 
     public TransactionDto returnMoney(long transactionId) {

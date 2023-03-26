@@ -1,4 +1,4 @@
-package ru.scriptrid.reviewservice.security;
+package ru.scriptrid.orderservice.security;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;

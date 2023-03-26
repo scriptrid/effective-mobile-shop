@@ -1,4 +1,4 @@
-package ru.scriptrid.reviewservice.model.entity;
+package ru.scriptrid.orderservice.model.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

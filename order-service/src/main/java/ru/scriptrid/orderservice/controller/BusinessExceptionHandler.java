@@ -1,25 +1,28 @@
-package ru.scriptrid.reviewservice.controller;
+package ru.scriptrid.orderservice.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-import ru.scriptrid.common.exception.FrozenOrganizationException;
 import ru.scriptrid.common.exception.FrozenUserException;
-import ru.scriptrid.reviewservice.exceptions.OrderNotFoundException;
-import ru.scriptrid.reviewservice.exceptions.RefundTimeException;
-import ru.scriptrid.reviewservice.exceptions.ReservationException;
+import ru.scriptrid.orderservice.exceptions.*;
 
 
 @ControllerAdvice
 public class BusinessExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler(FrozenOrganizationException.class)
-    public ResponseEntity<Void> onFrozenOrganization() {
-        return ResponseEntity.badRequest().build();
-    }
     @ExceptionHandler(FrozenUserException.class)
     public ResponseEntity<Void> onFrozenUser() {
+        return ResponseEntity.badRequest().build();
+    }
+
+    @ExceptionHandler(FailedTransactionException.class)
+    public ResponseEntity<Void> onFailedTransaction() {
+        return ResponseEntity.badRequest().build();
+    }
+
+    @ExceptionHandler(OrderAlreadyRefundedException.class)
+    public ResponseEntity<Void> onAlreadyRefundedOrder() {
         return ResponseEntity.badRequest().build();
     }
 

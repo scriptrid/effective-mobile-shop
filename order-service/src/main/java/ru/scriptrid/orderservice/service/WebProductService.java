@@ -1,4 +1,4 @@
-package ru.scriptrid.reviewservice.service;
+package ru.scriptrid.orderservice.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +14,7 @@ import reactor.core.publisher.Mono;
 import ru.scriptrid.common.dto.ProductDto;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
 import ru.scriptrid.common.security.JwtService;
+import ru.scriptrid.orderservice.exceptions.ReservationException;
 
 @Service
 @Slf4j
@@ -41,14 +42,19 @@ public class WebProductService {
 
     public void reserveProduct(long productId, int quantity) {
         String jwt = jwtService.generateServiceToken();
-        webClient.put()
-                .uri("/api/product/" + productId + "/reserve")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(quantity))
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
-                .retrieve()
-                .toBodilessEntity()
-                .block();
+        try {
+            webClient.put()
+                    .uri("/api/product/" + productId + "/reserve")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(BodyInserters.fromValue(quantity))
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+        } catch (WebClientResponseException.BadRequest e) {
+            log.warn("Error during reservation", e);
+            throw new ReservationException(e, productId, quantity);
+        }
     }
 
     public void returnProduct(long productId, int quantity) {

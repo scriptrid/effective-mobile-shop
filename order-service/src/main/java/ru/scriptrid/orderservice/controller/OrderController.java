@@ -1,12 +1,12 @@
-package ru.scriptrid.reviewservice.controller;
+package ru.scriptrid.orderservice.controller;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
-import ru.scriptrid.reviewservice.model.dto.OrderCreateDto;
-import ru.scriptrid.reviewservice.model.dto.OrderDto;
-import ru.scriptrid.reviewservice.service.OrderService;
+import ru.scriptrid.orderservice.service.OrderService;
+import ru.scriptrid.orderservice.model.dto.OrderCreateDto;
+import ru.scriptrid.orderservice.model.dto.OrderDto;
 
 import java.time.ZonedDateTime;
 import java.util.List;

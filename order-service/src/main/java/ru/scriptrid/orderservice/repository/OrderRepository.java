@@ -1,8 +1,8 @@
-package ru.scriptrid.reviewservice.repository;
+package ru.scriptrid.orderservice.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import ru.scriptrid.reviewservice.model.entity.OrderEntity;
+import ru.scriptrid.orderservice.model.entity.OrderEntity;
 
 import java.util.List;
 

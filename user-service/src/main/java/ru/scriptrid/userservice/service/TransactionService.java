@@ -35,6 +35,7 @@ public class TransactionService {
         if (customer.getBalance().compareTo(dto.total()) < 0) {
             throw new InsufficientFundsException(customer.getBalance(), dto.total());
         }
+
         customer.setBalance(customer.getBalance().subtract(dto.total()));
         seller.setBalance(seller.getBalance().add(dto.sellersIncome()));
 
@@ -56,11 +57,12 @@ public class TransactionService {
         returnTransaction.setSourceDelta(originalTransaction.getDestinationDelta().multiply(BigDecimal.valueOf(-1)));
         returnTransaction.setDestinationDelta(originalTransaction.getSourceDelta().multiply(BigDecimal.valueOf(-1)));
         returnTransaction.setIsReturn(true);
+        returnTransaction.setTimeOfTransaction(ZonedDateTime.now());
 
         customer.setBalance(customer.getBalance().add(returnTransaction.getDestinationDelta()));
-        seller.setBalance(customer.getBalance().add(returnTransaction.getSourceDelta()));
+        seller.setBalance(seller.getBalance().add(returnTransaction.getSourceDelta()));
 
-        return (toTransactionDto(transactionRepository.save(returnTransaction)));
+        return toTransactionDto(transactionRepository.save(returnTransaction));
     }
 
     private TransactionEntity toTransactionEntity(TransactionCreateDto transactionCreateDto) {

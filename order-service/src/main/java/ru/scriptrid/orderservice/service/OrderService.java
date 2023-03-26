@@ -1,22 +1,18 @@
-package ru.scriptrid.reviewservice.service;
+package ru.scriptrid.orderservice.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import ru.scriptrid.common.dto.*;
 import ru.scriptrid.common.exception.FrozenOrganizationException;
 import ru.scriptrid.common.exception.FrozenUserException;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
-import ru.scriptrid.reviewservice.exceptions.InvalidCustomerException;
-import ru.scriptrid.reviewservice.exceptions.OrderNotFoundException;
-import ru.scriptrid.reviewservice.exceptions.RefundTimeException;
-import ru.scriptrid.reviewservice.exceptions.ReservationException;
-import ru.scriptrid.reviewservice.model.dto.OrderCreateDto;
-import ru.scriptrid.reviewservice.model.dto.OrderDto;
-import ru.scriptrid.reviewservice.model.entity.OrderEntity;
-import ru.scriptrid.reviewservice.repository.OrderRepository;
+import ru.scriptrid.orderservice.exceptions.*;
+import ru.scriptrid.orderservice.model.dto.OrderCreateDto;
+import ru.scriptrid.orderservice.model.dto.OrderDto;
+import ru.scriptrid.orderservice.model.entity.OrderEntity;
+import ru.scriptrid.orderservice.repository.OrderRepository;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -63,27 +59,32 @@ public class OrderService {
             log.warn("Seller user with id \"{}\" is frozen", seller.id());
             throw new FrozenUserException(seller.id());
         }
-        try {
-            webProductService.reserveProduct(dto.productId(), dto.quantity());
-        } catch (WebClientResponseException.BadRequest e) {
-            log.warn("Error during reservation", e);
-            throw new ReservationException(e, dto.productId(), dto.quantity());
-        }
-        return addReservedOrder(dto, product, seller.id(), token.getId());
+        webProductService.reserveProduct(dto.productId(), dto.quantity());
 
+        return addReservedOrder(dto, product, seller.id(), token.getId());
     }
 
     private OrderDto addReservedOrder(OrderCreateDto dto, ProductDto product, long sellerId, long customerId) {
         try {
             BigDecimal total = product.price().multiply(BigDecimal.valueOf(dto.quantity()));
             BigDecimal sellersIncome = total.subtract(total.multiply(commission));
-            TransactionDto transactionDto = webUserService.transferMoney(new TransactionCreateDto(customerId, sellerId, total, sellersIncome));
+            TransactionDto transactionDto = webUserService
+                    .transferMoney(new TransactionCreateDto(customerId, sellerId, total, sellersIncome));
+            return addPaidReservedOrder(dto, product, transactionDto);
+        } catch (Throwable e) {
+            log.info("Returning product by id \"{}\" in quantity \"{}\"", product.id(), dto.quantity());
+            webProductService.returnProduct(dto.productId(), dto.quantity());
+            throw e;
+        }
+    }
 
+    private OrderDto addPaidReservedOrder(OrderCreateDto dto, ProductDto product, TransactionDto transactionDto) {
+        try {
             OrderEntity order = orderRepository.save(toOrderEntity(product, dto.quantity(), transactionDto));
-
             return toOrderDto(order);
         } catch (Throwable e) {
-            webProductService.returnProduct(dto.productId(), dto.quantity());
+            log.info("Returning money by transaction id \"{}\"", transactionDto.id());
+            webUserService.returnMoney(transactionDto.id());
             throw e;
         }
     }
@@ -96,15 +97,19 @@ public class OrderService {
         }
 
         OrderEntity order = getOrderById(orderId);
-
+        if (order.getIsReturned()) {
+            log.warn("The order with id \"{}\" already refunded", orderId);
+            throw new OrderAlreadyRefundedException(orderId);
+        }
         if (customerId != order.getCustomerId()) {
             log.warn("The user with id \"{}\" is not the customer of order with id \"{}\"", customerId, orderId);
             throw new InvalidCustomerException(order.getId(), customerId);
         }
-        if (Duration.between(timeOfRequest, order.getTimeOfOrder()).compareTo(Duration.ofDays(1)) > 0) {
-            log.warn("The time since order with id \"{}\" is greater than 1 day", orderId);
+        if (Duration.between(order.getTimeOfOrder(), timeOfRequest).compareTo(Duration.ofDays(1)) > 0) {
+            log.warn("The time since order with id \"{}\" is greater than  day", orderId);
             throw new RefundTimeException(Duration.between(timeOfRequest, order.getTimeOfOrder()));
         }
+        webProductService.returnProduct(order.getProductId(), order.getQuantityOfProduct());
         TransactionDto returningTransaction = webUserService.returnMoney(order.getTransactionId());
         order.setIsReturned(true);
         order.setReturningTransactionId(returningTransaction.id());
@@ -132,11 +137,12 @@ public class OrderService {
     private OrderEntity toOrderEntity(ProductDto product, int quantity, TransactionDto dto) {
         OrderEntity entity = new OrderEntity();
         entity.setCustomerId(dto.sourceId());
+        entity.setSellerId(dto.destinationId());
         entity.setProductId(product.id());
         entity.setTransactionId(dto.id());
         entity.setProductPrice(product.price());
         entity.setQuantityOfProduct(quantity);
-        entity.setTotalAmount(dto.sourceDelta());
+        entity.setTotalAmount(dto.sourceDelta().multiply(BigDecimal.valueOf(-1)));
         entity.setTimeOfOrder(ZonedDateTime.now());
         return entity;
     }
@@ -151,7 +157,7 @@ public class OrderService {
         return orders
                 .stream()
                 .map(this::toOrderDto)
-                .sorted(Comparator.comparing(OrderDto::timeOfOrder))
+                .sorted(Comparator.comparing(OrderDto::timeOfOrder).reversed())
                 .toList();
     }
 

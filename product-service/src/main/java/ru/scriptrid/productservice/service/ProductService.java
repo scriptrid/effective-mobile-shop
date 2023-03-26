@@ -2,6 +2,7 @@ package ru.scriptrid.productservice.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.scriptrid.common.dto.OrganizationDto;
 import ru.scriptrid.common.dto.ProductDto;
@@ -158,7 +159,7 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void reserveProduct(long id, int quantity) {
         ProductEntity productEntity = getProductEntity(id);
         if (productEntity.getQuantityInStock() < quantity) {
@@ -168,7 +169,7 @@ public class ProductService {
         productEntity.setQuantityInStock(productEntity.getQuantityInStock() - quantity);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void returnProduct(long id, int quantity) {
         ProductEntity productEntity = getProductEntity(id);
         productEntity.setQuantityInStock(productEntity.getQuantityInStock() + quantity);

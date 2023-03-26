@@ -6,4 +6,8 @@ public class FrozenOrganizationException extends RuntimeException {
     public FrozenOrganizationException(long id) {
         this.id = id;
     }
+
+    public long getId() {
+        return id;
+    }
 }
