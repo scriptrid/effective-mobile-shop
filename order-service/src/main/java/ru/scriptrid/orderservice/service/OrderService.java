@@ -68,7 +68,8 @@ public class OrderService {
 
     private OrderDto addReservedOrder(OrderCreateDto dto, ProductDto product, long sellerId, long customerId) {
         try {
-            BigDecimal total = product.price().multiply(BigDecimal.valueOf(dto.quantity()));
+            BigDecimal actualPrice = product.price().multiply(product.priceModifier());
+            BigDecimal total = actualPrice.multiply(BigDecimal.valueOf(dto.quantity()));
             BigDecimal sellersIncome = total.subtract(total.multiply(commission));
             TransactionDto transactionDto = webUserService
                     .transferMoney(new TransactionCreateDto(customerId, sellerId, total, sellersIncome));
