@@ -46,6 +46,9 @@ public class ProductEntity {
     @Column(name = "specs")
     private String specs;
 
+    @ManyToMany(mappedBy = "products")
+    private Set<DiscountEntity> discounts = new LinkedHashSet<>();
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -266,4 +266,8 @@ public class ProductService {
                 }
         );
     }
+
+    public Set<ProductEntity> getProductsByIds(Set<Long> productIds) {
+        return productRepository.findByIdIn(productIds);
+    }
 }

@@ -23,6 +23,16 @@ public class BusinessExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.notFound().build();
     }
 
+    @ExceptionHandler(InvalidProductsException.class)
+    public ResponseEntity<Void> onInvalidProducts() {
+        return ResponseEntity.badRequest().build();
+    }
+
+    @ExceptionHandler(InvalidTimeException.class)
+    public ResponseEntity<Void> onInvalidTime() {
+        return ResponseEntity.badRequest().build();
+    }
+
     @ExceptionHandler(RequestNotFoundException.class)
     public ResponseEntity<Void> onRequestNotFound() {
         return ResponseEntity.notFound().build();
