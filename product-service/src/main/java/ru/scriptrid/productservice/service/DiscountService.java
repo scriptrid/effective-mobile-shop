@@ -3,6 +3,8 @@ package ru.scriptrid.productservice.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.scriptrid.productservice.exceptions.DiscountNotFoundException;
+import ru.scriptrid.productservice.exceptions.EndedDiscountException;
 import ru.scriptrid.productservice.exceptions.InvalidProductsException;
 import ru.scriptrid.productservice.exceptions.InvalidTimeException;
 import ru.scriptrid.productservice.model.dto.DiscountCreateDto;
@@ -29,27 +31,38 @@ public class DiscountService {
 
     @Transactional
     public DiscountDto addDiscount(DiscountCreateDto dto) {
+        validateStartTimeIsNotInPast(dto);
+        validateEndTimeIsNotInPast(dto);
+        validateDtoTimeEndsAfterStart(dto);
+        DiscountEntity discount = discountRepository.save(toEntity(dto));
+        return toDto(discount);
+    }
 
-        if (dto.discountStart() != null && dto.discountStart().compareTo(ZonedDateTime.now()) < 0) {
-            log.warn("Discount starts in the past: {}", dto.discountStart());
-            throw new InvalidTimeException(dto.discountStart());
-        }
-        if (dto.discountEnd() != null && dto.discountEnd().compareTo(ZonedDateTime.now()) < 0) {
-            log.warn("Discount ends in the past: {}", dto.discountEnd());
-            throw new InvalidTimeException(dto.discountEnd());
-        }
-        if (dto.discountEnd() != null && dto.discountEnd().compareTo(dto.discountStart()) < 0) {
-            log.warn("Discount ends earlier than starts: {}", dto.discountEnd());
-            throw new InvalidTimeException(dto.discountEnd());
-        }
+
+    @Transactional
+    public DiscountDto editDiscount(long id, DiscountCreateDto dto) {
+        DiscountEntity discount = getDiscountEntity(id);
+        validateDiscountNotEnded(discount);
+        validateDtoTimeEndsAfterStart(dto);
+        modifyDiscount(discount, dto);
+        return toDto(discount);
+    }
+
+    private void modifyDiscount(DiscountEntity discount, DiscountCreateDto dto) {
         Set<ProductEntity> productsForDiscount = productService.getProductsByIds(dto.productIds());
-
         if (productsForDiscount.size() != dto.productIds().size()) {
             throw new InvalidProductsException(dto.productIds());
         }
+        discount.getProducts().clear();
+        discount.getProducts().addAll(productsForDiscount);
+        discount.setPriceModifier(dto.priceModifier());
 
-        DiscountEntity discount = discountRepository.save(toEntity(dto, productsForDiscount));
-        return toDto(discount);
+        if (dto.discountStart() == null) {
+            discount.setDiscountStart(ZonedDateTime.now());
+        } else {
+            discount.setDiscountStart(dto.discountStart());
+        }
+        discount.setDiscountEnd(dto.discountEnd());
     }
 
     private DiscountDto toDto(DiscountEntity discount) {
@@ -65,18 +78,60 @@ public class DiscountService {
         );
     }
 
-    private DiscountEntity toEntity(DiscountCreateDto dto, Set<ProductEntity> productsForDiscount) {
+    private DiscountEntity toEntity(DiscountCreateDto dto) {
         DiscountEntity entity = new DiscountEntity();
-        entity.getProducts().addAll(productsForDiscount);
-        entity.setPriceModifier(dto.priceModifier());
-
-        if (dto.discountStart() == null) {
-            entity.setDiscountStart(ZonedDateTime.now());
-        } else {
-            entity.setDiscountStart(dto.discountStart());
-        }
-        entity.setDiscountEnd(dto.discountEnd());
+        modifyDiscount(entity, dto);
 
         return entity;
+    }
+
+    private DiscountEntity getDiscountEntity(long id) {
+        return discountRepository.findById(id).orElseThrow(() -> {
+            log.warn("Discount with id \"{}\" not found", id);
+            return new DiscountNotFoundException(id);
+        });
+    }
+
+    @Transactional
+    public void stopDiscount(long id) {
+        DiscountEntity discountEntity = getDiscountEntity(id);
+        if (!discountStarted(discountEntity)) {
+            discountRepository.delete(discountEntity);
+        } else {
+            discountEntity.setDiscountEnd(ZonedDateTime.now());
+        }
+    }
+
+    private boolean discountStarted(DiscountEntity discountEntity) {
+        return discountEntity.getDiscountStart().isBefore(ZonedDateTime.now());
+    }
+
+    private void validateDiscountNotEnded(DiscountEntity discount) {
+        if (discount.getDiscountEnd() != null
+                && discount.getDiscountEnd().isBefore(ZonedDateTime.now())) {
+            log.warn("Discount to be edited with id \"{}\" ended", discount.getId());
+            throw new EndedDiscountException(discount.getId());
+        }
+    }
+
+    private void validateDtoTimeEndsAfterStart(DiscountCreateDto dto) {
+        if (dto.discountStart() != null && dto.discountEnd() != null && dto.discountEnd().isBefore(dto.discountStart())) {
+            log.warn("Discount ends earlier than starts: {}", dto.discountEnd());
+            throw new InvalidTimeException(dto.discountEnd());
+        }
+    }
+
+    private void validateEndTimeIsNotInPast(DiscountCreateDto dto) {
+        if (dto.discountEnd() != null && dto.discountEnd().isBefore(ZonedDateTime.now())) {
+            log.warn("Discount ends in the past: {}", dto.discountEnd());
+            throw new InvalidTimeException(dto.discountEnd());
+        }
+    }
+
+    private void validateStartTimeIsNotInPast(DiscountCreateDto dto) {
+        if (dto.discountStart() != null && dto.discountStart().isBefore(ZonedDateTime.now())) {
+            log.warn("Discount starts in the past: {}", dto.discountStart());
+            throw new InvalidTimeException(dto.discountStart());
+        }
     }
 }

@@ -42,4 +42,19 @@ public class BusinessExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Void> onInsufficientQuantity() {
         return ResponseEntity.badRequest().build();
     }
+
+    @ExceptionHandler(DiscountNotFoundException.class)
+    public ResponseEntity<Void> onDiscountNotFound() {
+        return ResponseEntity.notFound().build();
+    }
+
+    @ExceptionHandler(EndedDiscountException.class)
+    public ResponseEntity<Void> onEndedDiscount() {
+        return ResponseEntity.notFound().build();
+    }
+
+    @ExceptionHandler(StartedDiscountException.class)
+    public ResponseEntity<Void> onStartedDiscount() {
+        return ResponseEntity.notFound().build();
+    }
 }
