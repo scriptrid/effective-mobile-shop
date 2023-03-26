@@ -1,5 +1,6 @@
 package ru.scriptrid.ordersecrice.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,7 +24,7 @@ public class RequestController {
 
     @PostMapping
     public ResponseEntity<RequestOrganizationDto> requestOrganizationCreate(@AuthenticationPrincipal JwtAuthenticationToken token,
-                                                                            @RequestBody RequestOrganizationCreateDto dto) {
+                                                                            @RequestBody @Valid RequestOrganizationCreateDto dto) {
         RequestOrganizationDto requestOrganizationDto = requestService.addRequest(token, dto);
         return ResponseEntity.ok(requestOrganizationDto);
     }

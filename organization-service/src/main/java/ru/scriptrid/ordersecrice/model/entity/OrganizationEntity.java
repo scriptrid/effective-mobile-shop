@@ -9,7 +9,7 @@ import java.io.File;
 @Getter
 @Setter
 @Entity
-@Table(name = "organization_entity")
+@Table(name = "organizations")
 public class OrganizationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "organization_entity_seq")
@@ -34,6 +34,6 @@ public class OrganizationEntity {
     private Boolean isFrozen = false;
 
     @Column(name = "is_deleted")
-    private Boolean isDeleted;
+    private Boolean isDeleted = false;
 
 }

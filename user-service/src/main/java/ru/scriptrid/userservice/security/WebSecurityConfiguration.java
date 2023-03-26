@@ -30,7 +30,8 @@ public class WebSecurityConfiguration {
 
                 .and()
                 .authorizeHttpRequests()
-                .requestMatchers("/api/user/*").permitAll()
+                .requestMatchers("/api/auth/**", "/error").permitAll()
+                .anyRequest().authenticated()
 
                 .and()
                 .userDetailsService(userService)

@@ -28,6 +28,7 @@ public class WebSecurityConfiguration {
                 .cors()
                 .and()
                 .authorizeHttpRequests()
+                .requestMatchers("/error").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .exceptionHandling()

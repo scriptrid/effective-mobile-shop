@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "request_organization_entity")
+@Table(name = "requests_organization")
 public class RequestOrganizationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "request_organization_entity_seq")

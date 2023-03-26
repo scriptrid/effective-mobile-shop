@@ -1,4 +1,4 @@
-package ru.scriptrid.productservice.service;
+package ru.scriptrid.reviewservice.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

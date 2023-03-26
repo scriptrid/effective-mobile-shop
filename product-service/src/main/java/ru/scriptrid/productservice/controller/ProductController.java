@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.scriptrid.common.dto.ProductDto;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
 import ru.scriptrid.productservice.model.dto.ProductCreateDto;
+import ru.scriptrid.productservice.model.dto.RequestDto;
 import ru.scriptrid.productservice.service.ProductService;
 
 import java.util.List;
@@ -24,18 +25,16 @@ public class ProductController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<ProductDto> newRequestProduct(@AuthenticationPrincipal JwtAuthenticationToken token,
-                                                 @RequestBody @Valid ProductCreateDto dto) {
-        ProductDto productDto = productService.addRequest(token, dto);
-        return ResponseEntity.ok(productDto);
+    public RequestDto newRequestProduct(@AuthenticationPrincipal JwtAuthenticationToken token,
+                                        @RequestBody @Valid ProductCreateDto dto) {
+         return productService.addRequest(token, dto);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductDto> editProduct(@AuthenticationPrincipal JwtAuthenticationToken token,
+    public ProductDto editProduct(@AuthenticationPrincipal JwtAuthenticationToken token,
                                                   @PathVariable long id,
                                                   @RequestBody ProductCreateDto dto) {
-        ProductDto productDto = productService.editProduct(token, id, dto);
-        return ResponseEntity.ok(productDto);
+        return productService.editProduct(token, id, dto);
     }
 
 
@@ -47,9 +46,8 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductDto> getProduct(@PathVariable long id) {
-        ProductDto dto = productService.getProductDto(id);
-        return ResponseEntity.ok(dto);
+    public ProductDto getProduct(@PathVariable long id) {
+        return productService.getProductDto(id);
     }
 
     @GetMapping("/all")
@@ -59,13 +57,13 @@ public class ProductController {
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/requests")
-    public List<ProductDto> getAllRequests() {
+    public List<RequestDto> getAllRequests() {
         return productService.getAllRequests();
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/request/{id}")
-    public ProductDto getAllRequests(@PathVariable long id) {
+    public RequestDto getAllRequests(@PathVariable long id) {
         return productService.getRequest(id);
     }
 

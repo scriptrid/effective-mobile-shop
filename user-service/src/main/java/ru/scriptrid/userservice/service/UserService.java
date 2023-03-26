@@ -7,9 +7,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.scriptrid.common.dto.TransactionCreateDto;
 import ru.scriptrid.common.dto.UserDto;
-import ru.scriptrid.userservice.exceptions.InsufficientFundsException;
 import ru.scriptrid.userservice.exceptions.UserNotFoundByIdException;
 import ru.scriptrid.userservice.exceptions.UserNotFoundByUsernameException;
 import ru.scriptrid.userservice.exceptions.UsernameAlreadyExistsException;
@@ -102,7 +100,7 @@ public class UserService implements UserDetailsService {
         return toUserDto(getUserById(id));
     }
 
-    private UserEntity getUserById(long id) {
+    public UserEntity getUserById(long id) {
         return userRepository.findById(id).orElseThrow(
                 () -> {
                     log.warn("The user with id \"{}\" not found", id);
@@ -127,18 +125,6 @@ public class UserService implements UserDetailsService {
                 .stream()
                 .map(this::toUserDto)
                 .toList();
-    }
-
-    @Transactional
-    public void transfer(TransactionCreateDto dto) {
-        UserEntity customer = getUserById(dto.customerId());
-        UserEntity seller = getUserById(dto.sellerId());
-
-        if (customer.getBalance().compareTo(dto.total()) < 0) {
-            throw new InsufficientFundsException(customer.getBalance(), dto.total());
-        }
-        customer.setBalance(customer.getBalance().subtract(dto.total()));
-        seller.setBalance(seller.getBalance().add(dto.sellersIncome()));
     }
 }
 

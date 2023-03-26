@@ -13,7 +13,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-@Table(name = "product_entity")
+@Table(name = "products")
 public class ProductEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "product_entity_seq")
@@ -28,23 +28,23 @@ public class ProductEntity {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "organization_id", nullable = false)
+    private long organizationId;
+
     @Column(name = "price", nullable = false)
     private BigDecimal price;
 
     @Column(name = "quantity_in_stock", nullable = false)
     private Integer quantityInStock;
 
-    @Lob
-    @Column(name = "specs")
-    private String specs;
-
-    @Column(name = "organization_id", nullable = false)
-    private long organizationId;
-
     @ElementCollection
     @Column(name = "tag")
     @CollectionTable(name = "product_tags", joinColumns = @JoinColumn(name = "product_id"))
     private Set<String> tags = new LinkedHashSet<>();
+
+    @Lob
+    @Column(name = "specs")
+    private String specs;
 
     @Override
     public boolean equals(Object o) {

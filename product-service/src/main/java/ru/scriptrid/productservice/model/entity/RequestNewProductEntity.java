@@ -3,15 +3,17 @@ package ru.scriptrid.productservice.model.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.Hibernate;
 
 import java.math.BigDecimal;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "request_new_product_entity")
+@Table(name = "requests_new_product")
 public class RequestNewProductEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "request_new_product_entity_seq")
@@ -44,4 +46,15 @@ public class RequestNewProductEntity {
     @Column(name = "specs")
     private String specs;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        ProductEntity that = (ProductEntity) o;
+        return getId() != null && Objects.equals(getId(), that.getId());
+    }
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

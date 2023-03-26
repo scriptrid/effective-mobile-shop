@@ -1,16 +1,19 @@
 package ru.scriptrid.userservice.controller;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.scriptrid.common.dto.TransactionCreateDto;
-import ru.scriptrid.common.security.JwtAuthenticationToken;
 import ru.scriptrid.common.dto.UserDto;
+import ru.scriptrid.common.security.JwtAuthenticationToken;
 import ru.scriptrid.userservice.service.UserService;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+@Validated
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
@@ -24,7 +27,7 @@ public class UserController {
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/balance/{id}")
-    public UserDto setBalance(@PathVariable long id, @RequestBody BigDecimal balance) {
+    public UserDto setBalance(@PathVariable long id, @RequestBody @Valid @Min(0) BigDecimal balance) {
         return userService.setBalance(id, balance);
     }
 
@@ -55,12 +58,4 @@ public class UserController {
     public void deleteUser(@AuthenticationPrincipal JwtAuthenticationToken token) {
         userService.deleteUser(token.getId());
     }
-
-    @PreAuthorize("hasAuthority('ROLE_SERVICE')")
-    @PutMapping("/balance/transfer")
-    public void transfer(@RequestBody TransactionCreateDto dto) {
-        userService.transfer(dto);
-    }
-
-
 }

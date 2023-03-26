@@ -10,12 +10,11 @@ import ru.scriptrid.common.exception.FrozenOrganizationException;
 import ru.scriptrid.common.exception.InvalidOwnerException;
 import ru.scriptrid.common.exception.OrganizationNotFoundByIdException;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
-import ru.scriptrid.productservice.exceptions.InsufficientQuantityException;
-import ru.scriptrid.productservice.exceptions.ProductAlreadyExistsException;
-import ru.scriptrid.productservice.exceptions.ProductNotFoundByIdException;
-import ru.scriptrid.productservice.exceptions.RequestNotFoundException;
+import ru.scriptrid.productservice.exceptions.*;
 import ru.scriptrid.productservice.model.dto.ProductCreateDto;
+import ru.scriptrid.productservice.model.dto.RequestDto;
 import ru.scriptrid.productservice.model.entity.ProductEntity;
+import ru.scriptrid.productservice.model.entity.RequestNewProductEntity;
 import ru.scriptrid.productservice.repository.ProductRepository;
 import ru.scriptrid.productservice.repository.RequestNewProductRepository;
 
@@ -39,7 +38,7 @@ public class ProductService {
 
 
     @Transactional
-    public ProductDto addRequest(JwtAuthenticationToken token, ProductCreateDto dto) {
+    public RequestDto addRequest(JwtAuthenticationToken token, ProductCreateDto dto) {
         OrganizationDto organizationDto = webOrganizationService.getDto(dto.organizationId());
         if (organizationDto == null) {
             log.warn("Organization with id \"{}\" was not found", dto.organizationId());
@@ -57,12 +56,34 @@ public class ProductService {
             log.warn("User \"{}\" is not an owner of organization with id \"{}\"", token.getUsername(), dto.organizationId());
             throw new InvalidOwnerException(organizationDto.id(), organizationDto.ownerId(), token.getId());
         }
-        if (productRepository.existsByProductName(dto.productName())) {
-            log.warn("The product \"{}\" already exists", dto.productName());
-            throw new ProductAlreadyExistsException(dto.productName());
-        }
-        ProductEntity request = requestNewProductRepository.save(toEntity(dto));
-        return toProductDto(request);
+
+        RequestNewProductEntity request = requestNewProductRepository.save(toRequestEntity(dto));
+        return toRequestDto(request);
+    }
+
+    private RequestDto toRequestDto(RequestNewProductEntity request) {
+        return new RequestDto(
+                request.getId(),
+                request.getProductName(),
+                request.getDescription(),
+                request.getOrganizationId(),
+                request.getPrice(),
+                request.getQuantityInStock(),
+                List.copyOf(request.getTags()),
+                request.getSpecs()
+        );
+    }
+
+    private RequestNewProductEntity toRequestEntity(ProductCreateDto dto) {
+        RequestNewProductEntity entity = new RequestNewProductEntity();
+        entity.setProductName(dto.productName());
+        entity.setDescription(dto.description());
+        entity.setOrganizationId(dto.organizationId());
+        entity.setPrice(dto.price());
+        entity.setQuantityInStock(dto.quantityInStock());
+        entity.setTags(Set.copyOf(dto.tags()));
+        entity.setSpecs(dto.specs());
+        return entity;
     }
 
     @Transactional
@@ -72,15 +93,13 @@ public class ProductService {
 
     @Transactional
     public ProductDto addProduct(long requestId) {
-        ProductEntity request = getRequestById(requestId);
-        ProductEntity newProduct = new ProductEntity();
-        newProduct.setProductName(request.getProductName());
-        newProduct.setDescription(request.getDescription());
-        newProduct.setPrice(request.getPrice());
-        newProduct.setQuantityInStock(request.getQuantityInStock());
-        newProduct.setSpecs(request.getSpecs());
-        newProduct.setOrganizationId(request.getOrganizationId());
-        newProduct.setTags(request.getTags());
+        RequestNewProductEntity request = getRequestById(requestId);
+        if (productRepository.existsByProductName(request.getProductName())) {
+            log.warn("Product with name \"{}\" already exists", request.getProductName());
+            throw  new ProductAlreadyExistsByNameException(request.getProductName());
+        }
+        requestNewProductRepository.delete(request);
+        ProductEntity newProduct = createEntity(request);
 
         requestNewProductRepository.delete(request);
         return toProductDto(productRepository.save(newProduct));
@@ -97,10 +116,6 @@ public class ProductService {
 
         OrganizationDto newOrganizationDto = webOrganizationService.getDto(dto.organizationId());
         OrganizationDto oldOrganizationDto = webOrganizationService.getDto(product.getId());
-        if (token.isAdmin()) {
-
-            return toProductDto(modifyEntity(product, dto));
-        }
         if (newOrganizationDto == null) {
             log.warn("Organization \"{}\" was not found", dto.organizationId());
             throw new OrganizationNotFoundByIdException(id);
@@ -108,6 +123,9 @@ public class ProductService {
         if (newOrganizationDto.isFrozen()) {
             log.warn("Organization with id \"{}\" is frozen", dto.organizationId());
             throw new FrozenOrganizationException(dto.organizationId());
+        }
+        if (token.isAdmin()) {
+            return toProductDto(modifyEntity(product, dto));
         }
 
         if (oldOrganizationDto.ownerId() != token.getId()) {
@@ -120,7 +138,7 @@ public class ProductService {
         }
         if (productRepository.existsByProductName(dto.productName()) && !product.getProductName().equals(dto.productName())) {
             log.warn("The product with new name \"{}\" already exists", dto.productName());
-            throw new ProductAlreadyExistsException(dto.productName());
+            throw new ProductAlreadyExistsByIdException(dto.productName());
         }
 
         return toProductDto(modifyEntity(product, dto));
@@ -144,6 +162,7 @@ public class ProductService {
     public void reserveProduct(long id, int quantity) {
         ProductEntity productEntity = getProductEntity(id);
         if (productEntity.getQuantityInStock() < quantity) {
+            log.warn("Insufficient quantity of product by id \"{}\"", id);
             throw new InsufficientQuantityException(productEntity.getQuantityInStock(), quantity);
         }
         productEntity.setQuantityInStock(productEntity.getQuantityInStock() - quantity);
@@ -168,30 +187,14 @@ public class ProductService {
         );
     }
 
-    private ProductEntity toEntity(ProductCreateDto dto) {
-        ProductEntity entity = new ProductEntity();
-        modifyEntity(entity, dto);
-        return entity;
-    }
-
     private ProductEntity modifyEntity(ProductEntity entity, ProductCreateDto dto) {
         entity.setProductName(dto.productName());
-
-        if (dto.description() != null) {
-            entity.setDescription(dto.description());
-        } else {
-            entity.setDescription("Empty description");
-        }
-
+        entity.setDescription(dto.description());
         entity.setOrganizationId(dto.organizationId());
         entity.setPrice(dto.price());
         entity.setQuantityInStock(dto.quantityInStock());
         entity.setTags(Set.copyOf(dto.tags()));
-        if (dto.specs() != null) {
-            entity.setSpecs(dto.specs());
-        } else {
-            entity.setSpecs("Empty specs");
-        }
+        entity.setSpecs(dto.specs());
         return entity;
     }
 
@@ -219,8 +222,20 @@ public class ProductService {
         );
     }
 
+    private static ProductEntity createEntity(RequestNewProductEntity request) {
+        ProductEntity newProduct = new ProductEntity();
+        newProduct.setProductName(request.getProductName());
+        newProduct.setDescription(request.getDescription());
+        newProduct.setPrice(request.getPrice());
+        newProduct.setQuantityInStock(request.getQuantityInStock());
+        newProduct.setSpecs(request.getSpecs());
+        newProduct.setOrganizationId(request.getOrganizationId());
+        newProduct.setTags(request.getTags());
+        return newProduct;
+    }
+
     public List<ProductDto> getAllProducts() {
-        return productRepository.findAll()
+        return productRepository.findAll() //TODO more efficient filter
                 .stream()
                 .filter(product -> {
                     OrganizationDto organization = webOrganizationService.getDto(product.getOrganizationId());
@@ -230,17 +245,19 @@ public class ProductService {
                 .sorted(Comparator.comparing(ProductDto::productName))
                 .toList();
     }
-    public List<ProductDto> getAllRequests() {
+
+    public List<RequestDto> getAllRequests() {
         return requestNewProductRepository
                 .findAll()
                 .stream()
-                .map(this::toProductDto).toList();
+                .map(this::toRequestDto).toList();
     }
 
-    public ProductDto getRequest(long id) {
-        return toProductDto(getRequestById(id));
+    public RequestDto getRequest(long id) {
+        return toRequestDto(getRequestById(id));
     }
-    private ProductEntity getRequestById(long id) {
+
+    private RequestNewProductEntity getRequestById(long id) {
         return requestNewProductRepository.findById(id).orElseThrow(
                 () -> {
                     log.warn("The request with id \"{}\" was not found", id);

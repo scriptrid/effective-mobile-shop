@@ -5,15 +5,13 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.scriptrid.common.dto.OrganizationDto;
-import ru.scriptrid.common.exception.FrozenOrganizationException;
-import ru.scriptrid.common.exception.InvalidOwnerException;
-import ru.scriptrid.common.exception.OrganizationAlreadyExistsException;
-import ru.scriptrid.common.exception.OrganizationNotFoundByIdException;
+import ru.scriptrid.common.exception.*;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
 import ru.scriptrid.ordersecrice.model.dto.EditOrganizationDto;
 import ru.scriptrid.ordersecrice.model.dto.RequestOrganizationDto;
 import ru.scriptrid.ordersecrice.model.entity.OrganizationEntity;
 import ru.scriptrid.ordersecrice.repository.OrganizationRepository;
+import ru.scriptrid.ordersecrice.repository.RequestOrganizationRepository;
 
 import java.util.Comparator;
 import java.util.List;
@@ -21,19 +19,22 @@ import java.util.List;
 @Service
 @Slf4j
 public class OrganizationService {
+    private final RequestOrganizationRepository requestOrganizationRepository;
     private final OrganizationRepository organizationRepository;
 
     private final RequestService requestService;
 
-    public OrganizationService(OrganizationRepository organizationRepository, @Lazy RequestService requestService) { //TODO
+    public OrganizationService(OrganizationRepository organizationRepository, @Lazy RequestService requestService,
+                               RequestOrganizationRepository requestOrganizationRepository) { //TODO polish
         this.organizationRepository = organizationRepository;
         this.requestService = requestService;
+        this.requestOrganizationRepository = requestOrganizationRepository;
     }
 
     @Transactional
     public OrganizationDto addOrganization(long requestId) {
         RequestOrganizationDto request = requestService.getRequest(requestId);
-
+        requestOrganizationRepository.deleteById(requestId);
         if (organizationRepository.existsByName(request.organizationName())) {
             log.info("The organization \"{}\" already exists", request.organizationName());
             throw new OrganizationAlreadyExistsException(request.organizationName());
@@ -51,6 +52,10 @@ public class OrganizationService {
             throw new OrganizationNotFoundByIdException(id);
         }
         OrganizationEntity organization = getOrganization(id);
+        if (organization.getIsDeleted()) {
+            log.info("The organization with id \"{}\" was not found", id);
+            throw new OrganizationNotFoundByIdException(id);
+        }
         if (token.isAdmin()) {
             log.info("The organization with id \"{}\" was deleted by admin {}", id, token.getUsername());
             organization.setIsDeleted(true);
@@ -58,7 +63,7 @@ public class OrganizationService {
         }
         if (!isValidOwner(token.getId(), id)) {
             log.info("User \"{}\" is not an owner of organization with id \"{}\"", token.getUsername(), id);
-            throw new InvalidOwnerException(id, getOrganization(id).getOwnerId(), token.getId() );
+            throw new InvalidOwnerException(id, getOrganization(id).getOwnerId(), token.getId());
         }
         log.info("The organization with id \"{}\" was deleted by owner {}", id, token.getUsername());
         organization.setIsDeleted(true);
@@ -67,27 +72,32 @@ public class OrganizationService {
     @Transactional
     public OrganizationDto editOrganization(JwtAuthenticationToken token, long id, EditOrganizationDto dto) {
         if (!organizationRepository.existsById(id)) {
-            log.info("The organization to be edited with id \"{}\" was not found", id);
+            log.warn("The organization to be edited with id \"{}\" was not found", id);
             throw new OrganizationNotFoundByIdException(id);
         }
         OrganizationEntity entity = getOrganization(id);
 
         if (token.isAdmin()) {
             log.info("The organization with id \"{}\" was edited by admin \"{}\"", id, token.getUsername());
-            return toOrganizationDto(modifyEntity(entity, token.getId(), dto));
+            return toOrganizationDto(modifyEntity(entity, entity.getOwnerId(), dto));
         }
-        if (organizationIsFrozen(id)) {
-            log.info("Organization with id \"{}\" is frozen", id);
+        if (entity.getIsDeleted()) {
+            log.warn("Organization with id \"{}\" is deleted", id);
+            throw new DeletedOrganizationException(id);
+        }
+        if (entity.getIsFrozen()) {
+            log.warn("Organization with id \"{}\" is frozen", id);
             throw new FrozenOrganizationException(id);
         }
         if (!isValidOwner(token.getId(), id)) {
-            log.info("User \"{}\" is not an owner of \"{}\" organization", token.getUsername(), entity.getName());
+            log.warn("User \"{}\" is not an owner of \"{}\" organization", token.getUsername(), entity.getName());
             throw new InvalidOwnerException(id, entity.getOwnerId(), token.getId());
         }
-        if (organizationRepository.existsByName(dto.name())) {
-            log.info("The organization with new name \"{}\" already exists", dto.name());
+        if (organizationRepository.existsByName(dto.name()) && !dto.name().equals(entity.getName())) {
+            log.warn("The organization with new name \"{}\" already exists", dto.name());
             throw new OrganizationAlreadyExistsException(dto.name());
         }
+        log.info("The organization with id \"{}\" was edited by owner \"{}\"", id, token.getUsername());
         return toOrganizationDto(modifyEntity(entity, token.getId(), dto));
     }
 
@@ -99,6 +109,10 @@ public class OrganizationService {
             throw new OrganizationNotFoundByIdException(id);
         }
         OrganizationEntity entity = getOrganization(id);
+        if (entity.getIsDeleted()) {
+            log.warn("Organization with id \"{}\" is deleted", id);
+            throw new DeletedOrganizationException(id);
+        }
         entity.setIsFrozen(isFrozen);
         return toOrganizationDto(entity);
     }
@@ -106,20 +120,21 @@ public class OrganizationService {
     @Transactional
     public OrganizationDto getOrganizationDto(long id) {
         if (!organizationRepository.existsById(id)) {
-            log.info("The organization with id \"{}\" was not found", id);
+            log.warn("The organization with id \"{}\" was not found", id);
             throw new OrganizationNotFoundByIdException(id);
         }
-        return toOrganizationDto(getOrganization(id));
+        OrganizationEntity entity = getOrganization(id);
+        if (entity.getIsDeleted()) {
+            log.warn("Organization with id \"{}\" is deleted", id);
+            throw new DeletedOrganizationException(id);
+        }
+        return toOrganizationDto(entity);
     }
 
     private OrganizationEntity modifyEntity(OrganizationEntity entity, long ownerId, EditOrganizationDto dto) {
         entity.setName(dto.name());
         entity.setOwnerId(ownerId);
-        if (dto.description() != null) {
-            entity.setDescription(dto.description());
-        } else {
-            entity.setDescription("Empty description");
-        }
+        entity.setDescription(dto.description());
         return entity;
     }
 
@@ -145,9 +160,9 @@ public class OrganizationService {
         entity.setOwnerId(request.organizationOwner());
         return entity;
     }
-
+    @Transactional
     public List<OrganizationDto> getOrganizationsDto() {
-        List<OrganizationEntity> organizations = organizationRepository.findAll();
+        List<OrganizationEntity> organizations = organizationRepository.findByIsDeletedFalse();
 
         return organizations.stream()
                 .map(this::toOrganizationDto)
@@ -162,11 +177,6 @@ public class OrganizationService {
 
     public boolean isValidOwner(long userId, long organizationId) {
         return userId == getOrganization(organizationId).getOwnerId();
-    }
-
-
-    public boolean organizationIsFrozen(long id) {
-        return getOrganization(id).getIsFrozen();
     }
 
     public boolean organizationExistsByName(String name) {

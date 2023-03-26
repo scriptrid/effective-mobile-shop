@@ -23,8 +23,8 @@ public class OrganizationController {
 
     //TODO Add logo file
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @PostMapping("/submit")
-    public ResponseEntity<OrganizationDto> submitOrganization(@RequestParam long requestId) {
+    @PostMapping("/")
+    public ResponseEntity<OrganizationDto> submitOrganization(@RequestBody long requestId) {
         OrganizationDto organizationDto = organizationService.addOrganization(requestId);
         return ResponseEntity.ok(organizationDto);
     }
@@ -46,7 +46,7 @@ public class OrganizationController {
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/{id}/freeze")
-    public ResponseEntity<OrganizationDto> setFreezeForOrganization(@PathVariable long id, @RequestParam boolean isFrozen) {
+    public ResponseEntity<OrganizationDto> setFreezeForOrganization(@PathVariable long id, @RequestBody boolean isFrozen) {
         OrganizationDto dto = organizationService.setFreezeForOrganization(id, isFrozen);
         return ResponseEntity.ok(dto);
     }
