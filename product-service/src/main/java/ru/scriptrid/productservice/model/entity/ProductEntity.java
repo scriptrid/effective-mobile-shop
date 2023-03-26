@@ -24,8 +24,7 @@ public class ProductEntity {
     @Column(name = "product_name", nullable = false, unique = true)
     private String productName;
 
-    @Lob
-    @Column(name = "description")
+    @Column(name = "description", length = 2048)
     private String description;
 
     @Column(name = "organization_id", nullable = false)
@@ -42,8 +41,7 @@ public class ProductEntity {
     @CollectionTable(name = "product_tags", joinColumns = @JoinColumn(name = "product_id"))
     private Set<String> tags = new LinkedHashSet<>();
 
-    @Lob
-    @Column(name = "specs")
+    @Column(name = "specs", length = 2048)
     private String specs;
 
     @ManyToMany(mappedBy = "products")

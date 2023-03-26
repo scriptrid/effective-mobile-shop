@@ -50,7 +50,7 @@ public class ProductController {
         return productService.getProductDto(id);
     }
 
-    @GetMapping("/all")
+    @GetMapping("/")
     public List<ProductDto> getAllProducts() {
         return productService.getAllProducts();
     }

@@ -1,5 +1,7 @@
 package ru.scriptrid.common.dto;
 
+import jakarta.annotation.Nullable;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -18,6 +20,9 @@ public record ProductDto(
 
         List<String> tags,
 
-        String specs
+        String specs,
+
+        @Nullable
+        BigDecimal priceModifier
 ) {
 }

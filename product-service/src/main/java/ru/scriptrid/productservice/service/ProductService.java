@@ -14,11 +14,14 @@ import ru.scriptrid.common.security.JwtAuthenticationToken;
 import ru.scriptrid.productservice.exceptions.*;
 import ru.scriptrid.productservice.model.dto.ProductCreateDto;
 import ru.scriptrid.productservice.model.dto.RequestDto;
+import ru.scriptrid.productservice.model.entity.DiscountEntity;
 import ru.scriptrid.productservice.model.entity.ProductEntity;
 import ru.scriptrid.productservice.model.entity.RequestNewProductEntity;
 import ru.scriptrid.productservice.repository.ProductRepository;
 import ru.scriptrid.productservice.repository.RequestNewProductRepository;
 
+import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -184,8 +187,34 @@ public class ProductService {
                 entity.getPrice(),
                 entity.getQuantityInStock(),
                 List.copyOf(entity.getTags()),
-                entity.getSpecs()
+                entity.getSpecs(),
+                null
         );
+    }
+
+    private ProductDto toProductDtoWithPriceModifier(ProductEntity entity) {
+        return new ProductDto(
+                entity.getId(),
+                entity.getProductName(),
+                entity.getDescription(),
+                entity.getOrganizationId(),
+                entity.getPrice(),
+                entity.getQuantityInStock(),
+                List.copyOf(entity.getTags()),
+                entity.getSpecs(),
+                getPriceModifier(entity)
+        );
+    }
+
+    private BigDecimal getPriceModifier(ProductEntity entity) {
+        ZonedDateTime now = ZonedDateTime.now();
+        return entity.getDiscounts()
+                .stream()
+                .filter(discount -> discount.getDiscountStart().isBefore(now)
+                        && (discount.getDiscountEnd() == null || discount.getDiscountEnd().isAfter(now)))
+                .map(DiscountEntity::getPriceModifier)
+                .min(Comparator.naturalOrder())
+                .orElse(BigDecimal.ONE);
     }
 
     private ProductEntity modifyEntity(ProductEntity entity, ProductCreateDto dto) {
@@ -200,7 +229,7 @@ public class ProductService {
     }
 
     public ProductDto getProductDto(long id) {
-        ProductEntity product = getProductEntity(id);
+        ProductEntity product = getProductEntityWithDiscounts(id);
         OrganizationDto organizationDto = webOrganizationService.getDto(product.getOrganizationId());
         if (organizationDto.isFrozen()) {
             log.warn("Organization with id \"{}\" is frozen", organizationDto.id());
@@ -210,12 +239,20 @@ public class ProductService {
             log.warn("Organization with id \"{}\" is deleted", organizationDto.id());
             throw new DeletedOrganizationException(organizationDto.id());
         }
-        return toProductDto(product);
-
+        return toProductDtoWithPriceModifier(product);
     }
 
     private ProductEntity getProductEntity(long id) {
         return productRepository.findById(id).orElseThrow(
+                () -> {
+                    log.warn("The product with id \"{}\" was not found", id);
+                    return new ProductNotFoundByIdException(id);
+                }
+        );
+    }
+
+    private ProductEntity getProductEntityWithDiscounts(long id) {
+        return productRepository.findByIdWithDiscounts(id).orElseThrow(
                 () -> {
                     log.warn("The product with id \"{}\" was not found", id);
                     return new ProductNotFoundByIdException(id);
@@ -236,13 +273,13 @@ public class ProductService {
     }
 
     public List<ProductDto> getAllProducts() {
-        return productRepository.findAll() //TODO more efficient filter
+        return productRepository.findAllWithDiscounts()
                 .stream()
-                .filter(product -> {
+                .filter(product -> {//TODO more efficient filter
                     OrganizationDto organization = webOrganizationService.getDto(product.getOrganizationId());
                     return !organization.isDeleted() && !organization.isFrozen();
                 })
-                .map(this::toProductDto)
+                .map(this::toProductDtoWithPriceModifier)
                 .sorted(Comparator.comparing(ProductDto::productName))
                 .toList();
     }
