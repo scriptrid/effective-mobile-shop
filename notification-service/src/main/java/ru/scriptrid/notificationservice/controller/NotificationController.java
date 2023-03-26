@@ -1,5 +1,6 @@
 package ru.scriptrid.notificationservice.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class NotificationController {
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping
-    public NotificationDto sendNotification(@RequestBody NotificationCreateDto dto) {
+    public NotificationDto sendNotification(@RequestBody @Valid NotificationCreateDto dto) {
         return notificationService.sendNotification(dto);
     }
 

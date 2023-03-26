@@ -44,7 +44,7 @@ public class RequestController {
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> declineRequest(@PathVariable long id) {
-        requestService.declineRequest(id); //TODO Notify user about decline
+        requestService.declineRequest(id);
         return ResponseEntity.noContent().build();
     }
 }

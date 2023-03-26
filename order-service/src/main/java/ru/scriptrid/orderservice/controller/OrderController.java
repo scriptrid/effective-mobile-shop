@@ -3,10 +3,10 @@ package ru.scriptrid.orderservice.controller;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import ru.scriptrid.common.dto.OrderDto;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
-import ru.scriptrid.orderservice.service.OrderService;
 import ru.scriptrid.orderservice.model.dto.OrderCreateDto;
-import ru.scriptrid.orderservice.model.dto.OrderDto;
+import ru.scriptrid.orderservice.service.OrderService;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -30,6 +30,11 @@ public class OrderController {
     @GetMapping
     public List<OrderDto> getOrders(@RequestParam(required = false) Long userId) {
         return orderService.getOrders(userId);
+    }
+
+    @GetMapping("/{orderId}")
+    public OrderDto getOrder(@AuthenticationPrincipal JwtAuthenticationToken token, @PathVariable Long orderId) {
+        return orderService.getOrder(token, orderId);
     }
 
     @GetMapping("/my")

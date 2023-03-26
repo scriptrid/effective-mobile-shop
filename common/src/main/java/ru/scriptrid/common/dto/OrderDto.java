@@ -1,4 +1,4 @@
-package ru.scriptrid.orderservice.model.dto;
+package ru.scriptrid.common.dto;
 
 import jakarta.annotation.Nullable;
 

@@ -7,10 +7,12 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.scriptrid.common.dto.*;
 import ru.scriptrid.common.exception.FrozenOrganizationException;
 import ru.scriptrid.common.exception.FrozenUserException;
+import ru.scriptrid.common.exception.InvalidOwnerException;
+import ru.scriptrid.orderservice.exceptions.OrderNotFoundException;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
 import ru.scriptrid.orderservice.exceptions.*;
 import ru.scriptrid.orderservice.model.dto.OrderCreateDto;
-import ru.scriptrid.orderservice.model.dto.OrderDto;
+import ru.scriptrid.common.dto.OrderDto;
 import ru.scriptrid.orderservice.model.entity.OrderEntity;
 import ru.scriptrid.orderservice.repository.OrderRepository;
 
@@ -114,6 +116,15 @@ public class OrderService {
         order.setIsReturned(true);
         order.setReturningTransactionId(returningTransaction.id());
 
+        return toOrderDto(order);
+    }
+
+    public OrderDto getOrder(JwtAuthenticationToken token, Long orderId) {
+        OrderEntity order = getOrderById(orderId);
+        if (token.getId() != order.getCustomerId() && !token.isAdmin()) {
+            log.warn("User with id \"{}\" is not an owner of order with id \"{}\"", token.getId(), orderId);
+            throw new InvalidOwnerException(orderId, order.getCustomerId(), token.getId());
+        }
         return toOrderDto(order);
     }
 
