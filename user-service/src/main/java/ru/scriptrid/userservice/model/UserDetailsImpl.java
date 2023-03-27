@@ -63,4 +63,12 @@ public class UserDetailsImpl implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public boolean isFrozen() {
+        return isFrozen;
+    }
 }

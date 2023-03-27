@@ -6,4 +6,8 @@ public class FrozenUserException extends RuntimeException {
     public FrozenUserException(long id) {
         this.id = id;
     }
+
+    public long getId() {
+        return id;
+    }
 }

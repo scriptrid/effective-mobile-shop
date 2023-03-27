@@ -7,4 +7,8 @@ public class DeletedUserException extends RuntimeException {
 
         this.id = id;
     }
+
+    public long getId() {
+        return id;
+    }
 }
