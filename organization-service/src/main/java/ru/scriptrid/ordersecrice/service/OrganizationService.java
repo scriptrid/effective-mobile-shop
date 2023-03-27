@@ -35,14 +35,14 @@ public class OrganizationService {
     public OrganizationDto addOrganization(long requestId) {
         RequestOrganizationDto request = requestService.getRequest(requestId);
         requestOrganizationRepository.deleteById(requestId);
-        if (organizationRepository.existsByName(request.organizationName())) {
-            log.info("The organization \"{}\" already exists", request.organizationName());
-            throw new OrganizationAlreadyExistsException(request.organizationName());
+        if (organizationRepository.existsByName(request.name())) {
+            log.info("The organization \"{}\" already exists", request.name());
+            throw new OrganizationAlreadyExistsException(request.name());
         }
 
         organizationRepository.save(toOrganizationEntity(request));
-        log.info("The organization \"{}\" was successfully created", request.organizationName());
-        return toOrganizationDto(organizationRepository.findByName(request.organizationName()));
+        log.info("The organization \"{}\" was successfully created", request.name());
+        return toOrganizationDto(organizationRepository.findByName(request.name()));
     }
 
     @Transactional
@@ -134,6 +134,7 @@ public class OrganizationService {
     private OrganizationEntity modifyEntity(OrganizationEntity entity, long ownerId, EditOrganizationDto dto) {
         entity.setName(dto.name());
         entity.setOwnerId(ownerId);
+        entity.setLogoUrl(dto.logoUrl());
         entity.setDescription(dto.description());
         return entity;
     }
@@ -144,6 +145,7 @@ public class OrganizationService {
                 entity.getName(),
                 entity.getIsFrozen(),
                 entity.getIsDeleted(),
+                entity.getLogoUrl(),
                 entity.getOwnerId(),
                 entity.getDescription()
         );
@@ -151,15 +153,13 @@ public class OrganizationService {
 
     private OrganizationEntity toOrganizationEntity(RequestOrganizationDto request) {
         OrganizationEntity entity = new OrganizationEntity();
-        entity.setName(request.organizationName());
-        if (request.organizationDescription() != null) {
-            entity.setDescription(request.organizationDescription());
-        } else {
-            entity.setDescription("Empty description");
-        }
-        entity.setOwnerId(request.organizationOwner());
+        entity.setName(request.name());
+        entity.setDescription(request.description());
+        entity.setLogoUrl(request.logoUrl());
+        entity.setOwnerId(request.owner());
         return entity;
     }
+
     @Transactional
     public List<OrganizationDto> getOrganizationsDto() {
         List<OrganizationEntity> organizations = organizationRepository.findByIsDeletedFalse();

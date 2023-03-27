@@ -12,21 +12,21 @@ import java.util.Objects;
 @Entity
 @Table(name = "notifications")
 public class NotificationEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "new_entity_seq")
     @SequenceGenerator(name = "notification_seq")
     @Column(name = "id", nullable = false)
     private Long id;
+
     @Column(name = "destination_id", nullable = false)
     private Long destinationId;
 
     @Column(name = "notification_header", nullable = false)
     private String notificationHeader;
 
-    @Lob
-    @Column(name = "notification_text", nullable = false)
+    @Column(name = "notification_text", nullable = false, length = 2048)
     private String notificationText;
-
 
     @Override
     public boolean equals(Object o) {

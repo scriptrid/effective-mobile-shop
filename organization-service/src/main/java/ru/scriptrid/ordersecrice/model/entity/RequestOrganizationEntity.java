@@ -16,13 +16,15 @@ public class RequestOrganizationEntity {
     private Long id;
 
     @Column(name = "organization_name", nullable = false)
-    private String organizationName;
+    private String name;
 
-    @Lob
-    @Column(name = "organization_description")
-    private String organizationDescription;
+    @Column(name = "logo_url")
+    private String logoUrl;
+
+    @Column(name = "organization_description", length = 2048)
+    private String description;
 
     @Column(name = "organization_owner", nullable = false)
-    private Long organizationOwnerId;
+    private Long ownerId;
 
 }

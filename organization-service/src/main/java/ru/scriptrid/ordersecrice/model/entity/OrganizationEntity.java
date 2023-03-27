@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.io.File;
-
 @Getter
 @Setter
 @Entity
@@ -23,12 +21,11 @@ public class OrganizationEntity {
     @Column(name = "owner", nullable = false)
     private Long ownerId;
 
-    @Lob
     @Column(name = "description")
     private String description;
 
-    @Column(name = "logo")
-    private File logo;
+    @Column(name = "logo_url")
+    private String logoUrl;
 
     @Column(name = "is_frozen")
     private Boolean isFrozen = false;

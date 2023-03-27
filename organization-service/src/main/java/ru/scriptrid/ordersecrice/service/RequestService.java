@@ -39,17 +39,19 @@ public class RequestService {
     private RequestOrganizationDto toDto(RequestOrganizationEntity entity) {
         return new RequestOrganizationDto(
                 entity.getId(),
-                entity.getOrganizationName(),
-                entity.getOrganizationDescription(),
-                entity.getOrganizationOwnerId()
+                entity.getName(),
+                entity.getDescription(),
+                entity.getLogoUrl(),
+                entity.getOwnerId()
         );
     }
 
     private RequestOrganizationEntity toEntity(long usernameId, RequestOrganizationCreateDto dto) {
         RequestOrganizationEntity entity = new RequestOrganizationEntity();
-        entity.setOrganizationName(dto.name());
-        entity.setOrganizationDescription(dto.description());
-        entity.setOrganizationOwnerId(usernameId);
+        entity.setName(dto.name());
+        entity.setDescription(dto.description());
+        entity.setLogoUrl(dto.logoUrl());
+        entity.setOwnerId(usernameId);
         return entity;
     }
 

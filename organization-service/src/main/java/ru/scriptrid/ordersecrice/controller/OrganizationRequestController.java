@@ -14,11 +14,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/organization/request")
-public class RequestController {
+public class OrganizationRequestController {
 
     private final RequestService requestService;
 
-    public RequestController(RequestService requestService) {
+    public OrganizationRequestController(RequestService requestService) {
         this.requestService = requestService;
     }
 

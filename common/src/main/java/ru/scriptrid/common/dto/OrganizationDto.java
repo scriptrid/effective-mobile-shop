@@ -9,6 +9,8 @@ public record OrganizationDto(
 
         boolean isDeleted,
 
+        String logoUrl,
+
         long ownerId,
 
         String description) {

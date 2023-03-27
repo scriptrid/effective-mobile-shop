@@ -1,9 +1,10 @@
 package ru.scriptrid.ordersecrice.model.dto;
 
 public record RequestOrganizationDto(
-        long requestId,
-        String organizationName,
-        String organizationDescription,
-        long organizationOwner
+        long id,
+        String name,
+        String description,
+        String logoUrl,
+        long owner
 ) {
 }
