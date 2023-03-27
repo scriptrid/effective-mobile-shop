@@ -73,7 +73,7 @@ public class ProductService {
                 request.getOrganizationId(),
                 request.getPrice(),
                 request.getQuantityInStock(),
-                List.copyOf(request.getTags()),
+                request.getTags(),
                 request.getSpecs()
         );
     }
@@ -85,8 +85,8 @@ public class ProductService {
         entity.setOrganizationId(dto.organizationId());
         entity.setPrice(dto.price());
         entity.setQuantityInStock(dto.quantityInStock());
-        entity.setTags(Set.copyOf(dto.tags()));
-        entity.setSpecs(dto.specs());
+        entity.getTags().addAll(dto.tags());
+        entity.getSpecs().putAll(dto.specs());
         return entity;
     }
 
@@ -100,7 +100,7 @@ public class ProductService {
         RequestNewProductEntity request = getRequestById(requestId);
         if (productRepository.existsByProductName(request.getProductName())) {
             log.warn("Product with name \"{}\" already exists", request.getProductName());
-            throw  new ProductAlreadyExistsByNameException(request.getProductName());
+            throw new ProductAlreadyExistsByNameException(request.getProductName());
         }
         requestNewProductRepository.delete(request);
         ProductEntity newProduct = createEntity(request);
@@ -186,7 +186,7 @@ public class ProductService {
                 entity.getOrganizationId(),
                 entity.getPrice(),
                 entity.getQuantityInStock(),
-                List.copyOf(entity.getTags()),
+                entity.getTags(),
                 entity.getSpecs(),
                 null
         );
@@ -200,7 +200,7 @@ public class ProductService {
                 entity.getOrganizationId(),
                 entity.getPrice(),
                 entity.getQuantityInStock(),
-                List.copyOf(entity.getTags()),
+                entity.getTags(),
                 entity.getSpecs(),
                 getPriceModifier(entity)
         );

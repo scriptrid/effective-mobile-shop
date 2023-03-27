@@ -41,4 +41,13 @@ public class BusinessExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.badRequest().build();
     }
 
+    @ExceptionHandler(ProductNotFoundForOrderException.class)
+    public ResponseEntity<Void> onProductNotFoundForOrder() {
+        return ResponseEntity.badRequest().build();
+    }
+
+    @ExceptionHandler(UnableToGetProductException.class)
+    public ResponseEntity<Void> onUnableToGetProduct() {
+        return ResponseEntity.badRequest().build();
+    }
 }

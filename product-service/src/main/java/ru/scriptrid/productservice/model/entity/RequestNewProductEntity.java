@@ -6,9 +6,7 @@ import lombok.Setter;
 import org.hibernate.Hibernate;
 
 import java.math.BigDecimal;
-import java.util.LinkedHashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 @Setter
@@ -24,10 +22,9 @@ public class RequestNewProductEntity {
     @Column(name = "product_name", nullable = false)
     private String productName;
 
-    @Lob
-    @Column(name = "description")
-    private String description;
 
+    @Column(name = "description", length = 2048)
+    private String description;
     @Column(name = "organization_id", nullable = false)
     private Long organizationId;
 
@@ -40,11 +37,14 @@ public class RequestNewProductEntity {
     @ElementCollection
     @Column(name = "tag")
     @CollectionTable(name = "request_new_product_tags", joinColumns = @JoinColumn(name = "request_product_id"))
-    private Set<String> tags = new LinkedHashSet<>();
+    private Set<String> tags = new HashSet<>();
 
-    @Lob
-    @Column(name = "specs")
-    private String specs;
+    @ElementCollection
+    @CollectionTable(name = "product_request_specs",
+            joinColumns = {@JoinColumn(name = "product_id", referencedColumnName = "id")})
+    @MapKeyColumn(name = "spec_name")
+    @Column(name = "spec_value")
+    private Map<String, String> specs = new HashMap<>();
 
     @Override
     public boolean equals(Object o) {

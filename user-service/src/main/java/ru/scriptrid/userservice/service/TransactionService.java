@@ -33,6 +33,7 @@ public class TransactionService {
         UserEntity seller = userService.getUserById(dto.sellerId());
 
         if (customer.getBalance().compareTo(dto.total()) < 0) {
+            log.warn("Customer by id \"{}\" has not enough money", customer.getId());
             throw new InsufficientFundsException(customer.getBalance(), dto.total());
         }
 

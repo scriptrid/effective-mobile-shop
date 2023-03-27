@@ -24,7 +24,7 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @PostMapping("/")
+    @PostMapping("/request/")
     public RequestDto newRequestProduct(@AuthenticationPrincipal JwtAuthenticationToken token,
                                         @RequestBody @Valid ProductCreateDto dto) {
          return productService.addRequest(token, dto);
@@ -68,7 +68,7 @@ public class ProductController {
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @PostMapping("/request/{id}")
+    @PostMapping("/{id}")
     public ProductDto acceptRequest(@PathVariable long id) {
         return productService.addProduct(id);
     }

@@ -8,11 +8,9 @@ import ru.scriptrid.common.dto.*;
 import ru.scriptrid.common.exception.FrozenOrganizationException;
 import ru.scriptrid.common.exception.FrozenUserException;
 import ru.scriptrid.common.exception.InvalidOwnerException;
-import ru.scriptrid.orderservice.exceptions.OrderNotFoundException;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
 import ru.scriptrid.orderservice.exceptions.*;
 import ru.scriptrid.orderservice.model.dto.OrderCreateDto;
-import ru.scriptrid.common.dto.OrderDto;
 import ru.scriptrid.orderservice.model.entity.OrderEntity;
 import ru.scriptrid.orderservice.repository.OrderRepository;
 
@@ -45,6 +43,10 @@ public class OrderService {
     @Transactional
     public OrderDto addOrder(OrderCreateDto dto, JwtAuthenticationToken token) {
         ProductDto product = webProductService.getDto(dto.productId());
+        if (product == null) {
+            log.warn("Product with id \"{}\" not found", dto.productId());
+            throw new ProductNotFoundForOrderException(dto.productId());
+        }
         if (product.quantityInStock() < dto.quantity()) {
             log.warn("Error during reservation: insufficient quantity of product by id \"{}\": expected: {} found: {}",
                     product.id(), dto.quantity(), product.quantityInStock());

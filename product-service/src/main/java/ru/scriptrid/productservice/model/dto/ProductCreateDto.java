@@ -6,7 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Validated
 public record ProductCreateDto(
@@ -26,8 +27,8 @@ public record ProductCreateDto(
         @NotNull
         int quantityInStock,
 
-        List<String> tags,
+        Set<String> tags,
 
-        String specs
+        Map<String, String> specs
 ) {
 }

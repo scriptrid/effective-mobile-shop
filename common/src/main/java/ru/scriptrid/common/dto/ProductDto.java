@@ -3,7 +3,8 @@ package ru.scriptrid.common.dto;
 import jakarta.annotation.Nullable;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public record ProductDto(
         long id,
@@ -18,9 +19,9 @@ public record ProductDto(
 
         int quantityInStock,
 
-        List<String> tags,
+        Set<String> tags,
 
-        String specs,
+        Map<String,String> specs,
 
         @Nullable
         BigDecimal priceModifier

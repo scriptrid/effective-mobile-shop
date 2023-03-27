@@ -1,5 +1,6 @@
 package ru.scriptrid.orderservice.service;
 
+import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -15,6 +16,7 @@ import ru.scriptrid.common.dto.ProductDto;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
 import ru.scriptrid.common.security.JwtService;
 import ru.scriptrid.orderservice.exceptions.ReservationException;
+import ru.scriptrid.orderservice.exceptions.UnableToGetProductException;
 
 @Service
 @Slf4j
@@ -28,16 +30,21 @@ public class WebProductService {
         this.jwtService = jwtService;
     }
 
-    public ProductDto getDto(long id) {
-        JwtAuthenticationToken token = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        return webClient.get()
-                .uri("/api/product/" + id)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token.getJwt())
-                .retrieve()
-                .bodyToMono(ProductDto.class)
-                .onErrorResume(WebClientResponseException.class,
-                        e -> e.getStatusCode().equals(HttpStatus.NOT_FOUND) ? Mono.empty() : Mono.error(e))
-                .block();
+    @Nullable
+    public ProductDto getDto(long productId) {
+        try {
+            JwtAuthenticationToken token = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+            return webClient.get()
+                    .uri("/api/product/" + productId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token.getJwt())
+                    .retrieve()
+                    .bodyToMono(ProductDto.class)
+                    .onErrorResume(WebClientResponseException.class,
+                            e -> e.getStatusCode().equals(HttpStatus.NOT_FOUND) ? Mono.empty() : Mono.error(e))
+                    .block();
+        } catch (WebClientResponseException.BadRequest e) {
+            throw new UnableToGetProductException(e, productId);
+        }
     }
 
     public void reserveProduct(long productId, int quantity) {

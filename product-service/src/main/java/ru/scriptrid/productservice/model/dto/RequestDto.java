@@ -1,7 +1,8 @@
 package ru.scriptrid.productservice.model.dto;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public record RequestDto(
         long id,
@@ -10,7 +11,7 @@ public record RequestDto(
         long organizationId,
         BigDecimal price,
         int quantityInStock,
-        List<String> tags,
-        String specs
+        Set<String> tags,
+        Map<String, String> specs
 ) {
 }

@@ -13,7 +13,7 @@ import ru.scriptrid.ordersecrice.service.RequestService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/request")
+@RequestMapping("/api/organization/request")
 public class RequestController {
 
     private final RequestService requestService;

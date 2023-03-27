@@ -6,9 +6,7 @@ import lombok.Setter;
 import org.hibernate.Hibernate;
 
 import java.math.BigDecimal;
-import java.util.LinkedHashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 @Setter
@@ -39,10 +37,14 @@ public class ProductEntity {
     @ElementCollection
     @Column(name = "tag")
     @CollectionTable(name = "product_tags", joinColumns = @JoinColumn(name = "product_id"))
-    private Set<String> tags = new LinkedHashSet<>();
+    private Set<String> tags = new HashSet<>();
 
-    @Column(name = "specs", length = 2048)
-    private String specs;
+    @ElementCollection
+    @CollectionTable(name = "product_specs",
+            joinColumns = {@JoinColumn(name = "product_id", referencedColumnName = "id")})
+    @MapKeyColumn(name = "spec_name")
+    @Column(name = "spec_value")
+    private Map<String, String> specs = new HashMap<>();
 
     @ManyToMany(mappedBy = "products")
     private Set<DiscountEntity> discounts = new LinkedHashSet<>();
