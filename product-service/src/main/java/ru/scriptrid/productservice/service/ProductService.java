@@ -62,36 +62,13 @@ public class ProductService {
         }
 
         RequestNewProductEntity request = requestNewProductRepository.save(toRequestEntity(dto));
+        log.info("Product creation request with id \"{}\" was successfully added", request.getId());
         return toRequestDto(request);
-    }
-
-    private RequestDto toRequestDto(RequestNewProductEntity request) {
-        return new RequestDto(
-                request.getId(),
-                request.getProductName(),
-                request.getDescription(),
-                request.getOrganizationId(),
-                request.getPrice(),
-                request.getQuantityInStock(),
-                request.getTags(),
-                request.getSpecs()
-        );
-    }
-
-    private RequestNewProductEntity toRequestEntity(ProductCreateDto dto) {
-        RequestNewProductEntity entity = new RequestNewProductEntity();
-        entity.setProductName(dto.productName());
-        entity.setDescription(dto.description());
-        entity.setOrganizationId(dto.organizationId());
-        entity.setPrice(dto.price());
-        entity.setQuantityInStock(dto.quantityInStock());
-        entity.getTags().addAll(dto.tags());
-        entity.getSpecs().putAll(dto.specs());
-        return entity;
     }
 
     @Transactional
     public void rejectRequest(long id) {
+        log.info("Product creation request with id \"{}\" was rejected", id);
         requestNewProductRepository.delete(getRequestById(id));
     }
 
@@ -106,6 +83,7 @@ public class ProductService {
         ProductEntity newProduct = createEntity(request);
 
         requestNewProductRepository.delete(request);
+        log.info("Product with id \"{}\" was successfully added", newProduct.getId());
         return toProductDto(productRepository.save(newProduct));
     }
 
@@ -120,6 +98,7 @@ public class ProductService {
 
         OrganizationDto newOrganizationDto = webOrganizationService.getDto(dto.organizationId());
         OrganizationDto oldOrganizationDto = webOrganizationService.getDto(product.getId());
+
         if (newOrganizationDto == null) {
             log.warn("Organization \"{}\" was not found", dto.organizationId());
             throw new OrganizationNotFoundByIdException(id);
@@ -129,9 +108,9 @@ public class ProductService {
             throw new FrozenOrganizationException(dto.organizationId());
         }
         if (token.isAdmin()) {
+            log.info("Product with id \"{}\" was successfully edited by admin", id);
             return toProductDto(modifyEntity(product, dto));
         }
-
         if (oldOrganizationDto.ownerId() != token.getId()) {
             log.warn("User \"{}\" is not an owner of old organization\"{}\"", token.getUsername(), oldOrganizationDto.id());
             throw new InvalidOwnerException(oldOrganizationDto.id(), oldOrganizationDto.ownerId(), token.getId());
@@ -144,7 +123,7 @@ public class ProductService {
             log.warn("The product with new name \"{}\" already exists", dto.productName());
             throw new ProductAlreadyExistsByIdException(dto.productName());
         }
-
+        log.info("Product with id \"{}\" was successfully edited", id);
         return toProductDto(modifyEntity(product, dto));
     }
 
@@ -159,6 +138,7 @@ public class ProductService {
             log.warn("User \"{}\" is not an owner of organization \"{}\"", token.getUsername(), organizationDto.id());
             throw new InvalidOwnerException(organizationDto.id(), organizationDto.ownerId(), token.getId());
         }
+        log.info("Product with id \"{}\" was deleted", id);
         productRepository.deleteById(id);
     }
 
@@ -178,34 +158,6 @@ public class ProductService {
         productEntity.setQuantityInStock(productEntity.getQuantityInStock() + quantity);
     }
 
-    private ProductDto toProductDto(ProductEntity entity) {
-        return new ProductDto(
-                entity.getId(),
-                entity.getProductName(),
-                entity.getDescription(),
-                entity.getOrganizationId(),
-                entity.getPrice(),
-                entity.getQuantityInStock(),
-                entity.getTags(),
-                entity.getSpecs(),
-                null
-        );
-    }
-
-    private ProductDto toProductDtoWithPriceModifier(ProductEntity entity) {
-        return new ProductDto(
-                entity.getId(),
-                entity.getProductName(),
-                entity.getDescription(),
-                entity.getOrganizationId(),
-                entity.getPrice(),
-                entity.getQuantityInStock(),
-                entity.getTags(),
-                entity.getSpecs(),
-                getPriceModifier(entity)
-        );
-    }
-
     private BigDecimal getPriceModifier(ProductEntity entity) {
         ZonedDateTime now = ZonedDateTime.now();
         return entity.getDiscounts()
@@ -215,17 +167,6 @@ public class ProductService {
                 .map(DiscountEntity::getPriceModifier)
                 .min(Comparator.naturalOrder())
                 .orElse(BigDecimal.ONE);
-    }
-
-    private ProductEntity modifyEntity(ProductEntity entity, ProductCreateDto dto) {
-        entity.setProductName(dto.productName());
-        entity.setDescription(dto.description());
-        entity.setOrganizationId(dto.organizationId());
-        entity.setPrice(dto.price());
-        entity.setQuantityInStock(dto.quantityInStock());
-        entity.setTags(Set.copyOf(dto.tags()));
-        entity.setSpecs(dto.specs());
-        return entity;
     }
 
     public ProductDto getProductDto(long id) {
@@ -258,18 +199,6 @@ public class ProductService {
                     return new ProductNotFoundByIdException(id);
                 }
         );
-    }
-
-    private static ProductEntity createEntity(RequestNewProductEntity request) {
-        ProductEntity newProduct = new ProductEntity();
-        newProduct.setProductName(request.getProductName());
-        newProduct.setDescription(request.getDescription());
-        newProduct.setPrice(request.getPrice());
-        newProduct.setQuantityInStock(request.getQuantityInStock());
-        newProduct.setSpecs(request.getSpecs());
-        newProduct.setOrganizationId(request.getOrganizationId());
-        newProduct.setTags(request.getTags());
-        return newProduct;
     }
 
     public List<ProductDto> getAllProducts() {
@@ -306,5 +235,81 @@ public class ProductService {
 
     public Set<ProductEntity> getProductsByIds(Set<Long> productIds) {
         return productRepository.findByIdIn(productIds);
+    }
+
+    private RequestNewProductEntity toRequestEntity(ProductCreateDto dto) {
+        RequestNewProductEntity entity = new RequestNewProductEntity();
+        entity.setProductName(dto.productName());
+        entity.setDescription(dto.description());
+        entity.setOrganizationId(dto.organizationId());
+        entity.setPrice(dto.price());
+        entity.setQuantityInStock(dto.quantityInStock());
+        entity.getTags().addAll(dto.tags());
+        entity.getSpecs().putAll(dto.specs());
+        return entity;
+    }
+
+    private ProductEntity modifyEntity(ProductEntity entity, ProductCreateDto dto) {
+        entity.setProductName(dto.productName());
+        entity.setDescription(dto.description());
+        entity.setOrganizationId(dto.organizationId());
+        entity.setPrice(dto.price());
+        entity.setQuantityInStock(dto.quantityInStock());
+        entity.setTags(Set.copyOf(dto.tags()));
+        entity.setSpecs(dto.specs());
+        return entity;
+    }
+
+    private static ProductEntity createEntity(RequestNewProductEntity request) {
+        ProductEntity newProduct = new ProductEntity();
+        newProduct.setProductName(request.getProductName());
+        newProduct.setDescription(request.getDescription());
+        newProduct.setPrice(request.getPrice());
+        newProduct.setQuantityInStock(request.getQuantityInStock());
+        newProduct.setSpecs(request.getSpecs());
+        newProduct.setOrganizationId(request.getOrganizationId());
+        newProduct.setTags(request.getTags());
+        return newProduct;
+    }
+
+    private ProductDto toProductDtoWithPriceModifier(ProductEntity entity) {
+        return new ProductDto(
+                entity.getId(),
+                entity.getProductName(),
+                entity.getDescription(),
+                entity.getOrganizationId(),
+                entity.getPrice(),
+                entity.getQuantityInStock(),
+                entity.getTags(),
+                entity.getSpecs(),
+                getPriceModifier(entity)
+        );
+    }
+
+    private ProductDto toProductDto(ProductEntity entity) {
+        return new ProductDto(
+                entity.getId(),
+                entity.getProductName(),
+                entity.getDescription(),
+                entity.getOrganizationId(),
+                entity.getPrice(),
+                entity.getQuantityInStock(),
+                entity.getTags(),
+                entity.getSpecs(),
+                null
+        );
+    }
+
+    private RequestDto toRequestDto(RequestNewProductEntity request) {
+        return new RequestDto(
+                request.getId(),
+                request.getProductName(),
+                request.getDescription(),
+                request.getOrganizationId(),
+                request.getPrice(),
+                request.getQuantityInStock(),
+                request.getTags(),
+                request.getSpecs()
+        );
     }
 }

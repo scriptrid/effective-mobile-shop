@@ -34,15 +34,15 @@ public class ProductRequestController {
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @DeleteMapping("/{id}")
-    public void rejectRequest(@PathVariable long id) {
-        productService.rejectRequest(id);
-    }
-
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/{id}")
     public RequestDto getRequest(@PathVariable long id) {
         return productService.getRequest(id);
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @DeleteMapping("/{id}")
+    public void rejectRequest(@PathVariable long id) {
+        productService.rejectRequest(id);
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")

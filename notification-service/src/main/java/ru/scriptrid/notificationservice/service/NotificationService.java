@@ -40,6 +40,7 @@ public class NotificationService {
             throw new FrozenUserException(destinationUser.id());
         }
         NotificationEntity notificationEntity = notificationRepository.save(toEntity(dto));
+        log.info("Notification sent to user with id {}", dto.destinationId());
         return toDto(notificationEntity);
     }
 

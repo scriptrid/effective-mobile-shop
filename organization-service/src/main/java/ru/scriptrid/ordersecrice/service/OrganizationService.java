@@ -19,24 +19,24 @@ import java.util.List;
 @Service
 @Slf4j
 public class OrganizationService {
+
     private final RequestOrganizationRepository requestOrganizationRepository;
     private final OrganizationRepository organizationRepository;
+    private final RequestOrganizationService requestOrganizationService;
 
-    private final RequestService requestService;
-
-    public OrganizationService(OrganizationRepository organizationRepository, @Lazy RequestService requestService,
+    public OrganizationService(OrganizationRepository organizationRepository, @Lazy RequestOrganizationService requestOrganizationService,
                                RequestOrganizationRepository requestOrganizationRepository) { //TODO polish
         this.organizationRepository = organizationRepository;
-        this.requestService = requestService;
+        this.requestOrganizationService = requestOrganizationService;
         this.requestOrganizationRepository = requestOrganizationRepository;
     }
 
     @Transactional
     public OrganizationDto addOrganization(long requestId) {
-        RequestOrganizationDto request = requestService.getRequest(requestId);
+        RequestOrganizationDto request = requestOrganizationService.getRequest(requestId);
         requestOrganizationRepository.deleteById(requestId);
         if (organizationRepository.existsByName(request.name())) {
-            log.info("The organization \"{}\" already exists", request.name());
+            log.warn("The organization \"{}\" already exists", request.name());
             throw new OrganizationAlreadyExistsException(request.name());
         }
 
@@ -48,21 +48,21 @@ public class OrganizationService {
     @Transactional
     public void deleteOrganization(JwtAuthenticationToken token, long id) {
         if (!organizationRepository.existsById(id)) {
-            log.info("The organization with id \"{}\" was not found", id);
+            log.warn("The organization with id \"{}\" was not found", id);
             throw new OrganizationNotFoundByIdException(id);
         }
         OrganizationEntity organization = getOrganization(id);
         if (organization.getIsDeleted()) {
-            log.info("The organization with id \"{}\" was not found", id);
+            log.warn("The organization with id \"{}\" was not found", id);
             throw new OrganizationNotFoundByIdException(id);
         }
         if (token.isAdmin()) {
-            log.info("The organization with id \"{}\" was deleted by admin {}", id, token.getUsername());
+            log.warn("The organization with id \"{}\" was deleted by admin {}", id, token.getUsername());
             organization.setIsDeleted(true);
             return;
         }
         if (!isValidOwner(token.getId(), id)) {
-            log.info("User \"{}\" is not an owner of organization with id \"{}\"", token.getUsername(), id);
+            log.warn("User \"{}\" is not an owner of organization with id \"{}\"", token.getUsername(), id);
             throw new InvalidOwnerException(id, getOrganization(id).getOwnerId(), token.getId());
         }
         log.info("The organization with id \"{}\" was deleted by owner {}", id, token.getUsername());
@@ -78,7 +78,7 @@ public class OrganizationService {
         OrganizationEntity entity = getOrganization(id);
 
         if (token.isAdmin()) {
-            log.info("The organization with id \"{}\" was edited by admin \"{}\"", id, token.getUsername());
+            log.warn("The organization with id \"{}\" was edited by admin \"{}\"", id, token.getUsername());
             return toOrganizationDto(modifyEntity(entity, entity.getOwnerId(), dto));
         }
         if (entity.getIsDeleted()) {
@@ -114,6 +114,11 @@ public class OrganizationService {
             throw new DeletedOrganizationException(id);
         }
         entity.setIsFrozen(isFrozen);
+        if (isFrozen) {
+            log.info("Organization with id \"{}\" has been frozen", id);
+        } else {
+            log.info("Organization with id \"{}\" has been unfrozen", id);
+        }
         return toOrganizationDto(entity);
     }
 
@@ -124,10 +129,6 @@ public class OrganizationService {
             throw new OrganizationNotFoundByIdException(id);
         }
         OrganizationEntity entity = getOrganization(id);
-        if (entity.getIsDeleted()) {
-            log.warn("Organization with id \"{}\" is deleted", id);
-            throw new DeletedOrganizationException(id);
-        }
         return toOrganizationDto(entity);
     }
 

@@ -56,6 +56,7 @@ public class WebUserService {
                     .bodyToMono(TransactionDto.class)
                     .block();
         } catch (WebClientResponseException.BadRequest e) {
+            log.warn("Transaction failed during processing order");
             throw new FailedTransactionException(e, dto.customerId(), dto.sellerId(), dto.total(), dto.sellersIncome());
         }
     }

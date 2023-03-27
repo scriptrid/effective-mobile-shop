@@ -35,6 +35,7 @@ public class DiscountService {
         validateEndTimeIsNotInPast(dto);
         validateDtoTimeEndsAfterStart(dto);
         DiscountEntity discount = discountRepository.save(toEntity(dto));
+        log.info("Discount with id \"{}\" was successfully added", discount.getId());
         return toDto(discount);
     }
 
@@ -45,6 +46,7 @@ public class DiscountService {
         validateDiscountNotEnded(discount);
         validateDtoTimeEndsAfterStart(dto);
         modifyDiscount(discount, dto);
+        log.info("Discount with id \"{}\" was successfully edited", discount.getId());
         return toDto(discount);
     }
 
@@ -63,26 +65,6 @@ public class DiscountService {
             discount.setDiscountStart(dto.discountStart());
         }
         discount.setDiscountEnd(dto.discountEnd());
-    }
-
-    private DiscountDto toDto(DiscountEntity discount) {
-        return new DiscountDto(
-                discount.getId(),
-                discount.getProducts()
-                        .stream()
-                        .map(ProductEntity::getId)
-                        .collect(Collectors.toSet()),
-                discount.getPriceModifier(),
-                discount.getDiscountStart(),
-                discount.getDiscountEnd()
-        );
-    }
-
-    private DiscountEntity toEntity(DiscountCreateDto dto) {
-        DiscountEntity entity = new DiscountEntity();
-        modifyDiscount(entity, dto);
-
-        return entity;
     }
 
     private DiscountEntity getDiscountEntity(long id) {
@@ -133,5 +115,25 @@ public class DiscountService {
             log.warn("Discount starts in the past: {}", dto.discountStart());
             throw new InvalidTimeException(dto.discountStart());
         }
+    }
+
+    private DiscountEntity toEntity(DiscountCreateDto dto) {
+        DiscountEntity entity = new DiscountEntity();
+        modifyDiscount(entity, dto);
+
+        return entity;
+    }
+
+    private DiscountDto toDto(DiscountEntity discount) {
+        return new DiscountDto(
+                discount.getId(),
+                discount.getProducts()
+                        .stream()
+                        .map(ProductEntity::getId)
+                        .collect(Collectors.toSet()),
+                discount.getPriceModifier(),
+                discount.getDiscountStart(),
+                discount.getDiscountEnd()
+        );
     }
 }

@@ -46,6 +46,7 @@ public class ReviewService {
             throw new ReviewAlreadyExists(token.getId(), order.productId());
         }
         ReviewEntity review = reviewRepository.save(toEntity(order, dto));
+        log.warn("Review with id \"{}\" was successfully published", review.getId());
         return toDto(review);
     }
 

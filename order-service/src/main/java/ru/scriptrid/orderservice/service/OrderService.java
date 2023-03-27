@@ -64,7 +64,7 @@ public class OrderService {
             throw new FrozenUserException(seller.id());
         }
         webProductService.reserveProduct(dto.productId(), dto.quantity());
-
+        log.info("Product with id \"{}\" was reserved in quantity {}", dto.productId(), dto.quantity());
         return addReservedOrder(dto, product, seller.id(), token.getId());
     }
 
@@ -77,7 +77,7 @@ public class OrderService {
                     .transferMoney(new TransactionCreateDto(customerId, sellerId, total, sellersIncome));
             return addPaidReservedOrder(dto, product, transactionDto);
         } catch (Throwable e) {
-            log.info("Returning product by id \"{}\" in quantity \"{}\"", product.id(), dto.quantity());
+            log.info("Returning product with id \"{}\" in quantity \"{}\"", product.id(), dto.quantity());
             webProductService.returnProduct(dto.productId(), dto.quantity());
             throw e;
         }

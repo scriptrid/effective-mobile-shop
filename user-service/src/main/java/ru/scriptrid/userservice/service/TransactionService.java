@@ -63,6 +63,7 @@ public class TransactionService {
         customer.setBalance(customer.getBalance().add(returnTransaction.getDestinationDelta()));
         seller.setBalance(seller.getBalance().add(returnTransaction.getSourceDelta()));
 
+        log.info("Money successfully returned. Original transaction id: {}", originalTransactionId);
         return toTransactionDto(transactionRepository.save(returnTransaction));
     }
 

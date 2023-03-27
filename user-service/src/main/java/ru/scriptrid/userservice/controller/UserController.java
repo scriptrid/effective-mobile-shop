@@ -15,7 +15,7 @@ import java.util.List;
 
 @Validated
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/user/")
 public class UserController {
 
     private final UserService userService;
@@ -26,7 +26,7 @@ public class UserController {
 
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @PutMapping("/balance/{id}")
+    @PutMapping("/{id}/balance")
     public UserDto setBalance(@PathVariable long id, @RequestBody @Valid @Min(0) BigDecimal balance) {
         return userService.setBalance(id, balance);
     }

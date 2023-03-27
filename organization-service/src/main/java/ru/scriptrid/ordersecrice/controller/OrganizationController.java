@@ -12,7 +12,7 @@ import ru.scriptrid.ordersecrice.service.OrganizationService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/organization")
+@RequestMapping("/api/organization/")
 public class OrganizationController {
 
     private final OrganizationService organizationService;
@@ -23,15 +23,15 @@ public class OrganizationController {
 
     //TODO Add logo file
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @PostMapping("/")
-    public ResponseEntity<OrganizationDto> submitOrganization(@RequestBody long requestId) {
+    @PostMapping
+    public ResponseEntity<OrganizationDto> addOrganization(@RequestBody long requestId) {
         OrganizationDto organizationDto = organizationService.addOrganization(requestId);
         return ResponseEntity.ok(organizationDto);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping
     public ResponseEntity<Void> deleteOrganization(@AuthenticationPrincipal JwtAuthenticationToken token,
-                                                   @PathVariable long id) {
+                                                   @RequestBody long id) {
         organizationService.deleteOrganization(token, id);
         return ResponseEntity.noContent().build();
     }

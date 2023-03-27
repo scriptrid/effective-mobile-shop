@@ -15,12 +15,12 @@ import java.util.List;
 
 @Service
 @Slf4j
-public class RequestService {
+public class RequestOrganizationService {
     private final RequestOrganizationRepository requestOrganizationRepository;
     private final OrganizationService organizationService;
 
-    public RequestService(OrganizationService organizationService,
-                          RequestOrganizationRepository requestOrganizationRepository) {
+    public RequestOrganizationService(OrganizationService organizationService,
+                                      RequestOrganizationRepository requestOrganizationRepository) {
         this.organizationService = organizationService;
         this.requestOrganizationRepository = requestOrganizationRepository;
     }
@@ -28,31 +28,12 @@ public class RequestService {
     @Transactional
     public RequestOrganizationDto addRequest(JwtAuthenticationToken token, RequestOrganizationCreateDto dto) {
         if (organizationService.organizationExistsByName(dto.name())) {
-            log.info("The organization \"{}\" already exists", dto.name());
+            log.warn("The organization \"{}\" already exists", dto.name());
             throw new OrganizationAlreadyExistsException(dto.name());
         }
-        RequestOrganizationEntity entity = toEntity(token.getId(), dto);
-        requestOrganizationRepository.save(entity);
+        RequestOrganizationEntity entity = requestOrganizationRepository.save(toEntity(token.getId(), dto));
+        log.info("The organization creation request with id \"{}\" was successfully added", entity.getId());
         return toDto(entity);
-    }
-
-    private RequestOrganizationDto toDto(RequestOrganizationEntity entity) {
-        return new RequestOrganizationDto(
-                entity.getId(),
-                entity.getName(),
-                entity.getDescription(),
-                entity.getLogoUrl(),
-                entity.getOwnerId()
-        );
-    }
-
-    private RequestOrganizationEntity toEntity(long usernameId, RequestOrganizationCreateDto dto) {
-        RequestOrganizationEntity entity = new RequestOrganizationEntity();
-        entity.setName(dto.name());
-        entity.setDescription(dto.description());
-        entity.setLogoUrl(dto.logoUrl());
-        entity.setOwnerId(usernameId);
-        return entity;
     }
 
     public List<RequestOrganizationDto> getRequests() {
@@ -70,11 +51,30 @@ public class RequestService {
         return toDto(request);
     }
 
-    public void declineRequest(long id) {
+    public void rejectRequest(long id) {
         if (!requestOrganizationRepository.existsById(id)) {
             throw new RequestOrganizationNotFoundException(id);
         }
-
+        log.info("The organization creation request with id \"{}\" has been rejected", id);
         requestOrganizationRepository.deleteById(id);
+    }
+
+    private RequestOrganizationEntity toEntity(long usernameId, RequestOrganizationCreateDto dto) {
+        RequestOrganizationEntity entity = new RequestOrganizationEntity();
+        entity.setName(dto.name());
+        entity.setDescription(dto.description());
+        entity.setLogoUrl(dto.logoUrl());
+        entity.setOwnerId(usernameId);
+        return entity;
+    }
+
+    private RequestOrganizationDto toDto(RequestOrganizationEntity entity) {
+        return new RequestOrganizationDto(
+                entity.getId(),
+                entity.getName(),
+                entity.getDescription(),
+                entity.getLogoUrl(),
+                entity.getOwnerId()
+        );
     }
 }

@@ -8,43 +8,43 @@ import org.springframework.web.bind.annotation.*;
 import ru.scriptrid.common.security.JwtAuthenticationToken;
 import ru.scriptrid.ordersecrice.model.dto.RequestOrganizationCreateDto;
 import ru.scriptrid.ordersecrice.model.dto.RequestOrganizationDto;
-import ru.scriptrid.ordersecrice.service.RequestService;
+import ru.scriptrid.ordersecrice.service.RequestOrganizationService;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/organization/request")
+@RequestMapping("/api/organization/request/")
 public class OrganizationRequestController {
 
-    private final RequestService requestService;
+    private final RequestOrganizationService requestOrganizationService;
 
-    public OrganizationRequestController(RequestService requestService) {
-        this.requestService = requestService;
+    public OrganizationRequestController(RequestOrganizationService requestOrganizationService) {
+        this.requestOrganizationService = requestOrganizationService;
     }
 
     @PostMapping
     public ResponseEntity<RequestOrganizationDto> requestOrganizationCreate(@AuthenticationPrincipal JwtAuthenticationToken token,
                                                                             @RequestBody @Valid RequestOrganizationCreateDto dto) {
-        RequestOrganizationDto requestOrganizationDto = requestService.addRequest(token, dto);
+        RequestOrganizationDto requestOrganizationDto = requestOrganizationService.addRequest(token, dto);
         return ResponseEntity.ok(requestOrganizationDto);
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping
-    public ResponseEntity<List<RequestOrganizationDto>> getRequests() {
-        return ResponseEntity.ok(requestService.getRequests());
+    public List<RequestOrganizationDto> getRequests() {
+        return requestOrganizationService.getRequests();
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/{id}")
-    public ResponseEntity<RequestOrganizationDto> getRequests(@PathVariable long id) {
-        return ResponseEntity.ok(requestService.getRequest(id));
+    public RequestOrganizationDto getRequest(@PathVariable long id) {
+        return requestOrganizationService.getRequest(id);
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> declineRequest(@PathVariable long id) {
-        requestService.declineRequest(id);
+    public ResponseEntity<Void> rejectRequest(@PathVariable long id) {
+        requestOrganizationService.rejectRequest(id);
         return ResponseEntity.noContent().build();
     }
 }

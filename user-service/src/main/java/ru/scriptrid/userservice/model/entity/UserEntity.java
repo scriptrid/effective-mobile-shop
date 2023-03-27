@@ -38,6 +38,4 @@ public class UserEntity {
 
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;
-
-
 }

@@ -41,6 +41,7 @@ public class UserService implements UserDetailsService {
             throw new UsernameAlreadyExistsException(dto.username());
         }
         UserEntity userEntity = userRepository.save(toEntity(dto));
+        log.info("User was successfully created. id: {}  username: {}", userEntity.getId(), userEntity.getUsername());
         return toUserDto(userEntity);
     }
 
@@ -48,7 +49,7 @@ public class UserService implements UserDetailsService {
     public UserDto setBalance(long id, BigDecimal balance) {
         UserEntity entity = getUserById(id);
         entity.setBalance(balance);
-
+        log.info("Balance was set for user with id \"{}\". Actual balance: {}", entity.getId(), entity.getBalance());
         return toUserDto(entity);
     }
 
@@ -56,13 +57,18 @@ public class UserService implements UserDetailsService {
     public void setFreeze(long id, boolean isFrozen) {
         UserEntity entity = getUserById(id);
         entity.setIsFrozen(isFrozen);
-
+        if (isFrozen) {
+            log.info("User with id \"{}\" has been frozen", entity.getId());
+        } else {
+            log.info("User with id \"{}\" has been unfrozen", entity.getId());
+        }
     }
 
     @Transactional
     public void deleteUser(long id) {
         UserEntity entity = getUserById(id);
         entity.setIsDeleted(true);
+        log.info("User with id \"{}\" has been deleted", entity.getId());
     }
 
     @Override
